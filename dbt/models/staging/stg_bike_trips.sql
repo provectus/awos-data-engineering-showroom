@@ -5,7 +5,7 @@
 }}
 
 with source as (
-    select * from raw_bike.bike_trips
+    select * from {{ source('raw_bike', 'bike_trips') }}
 ),
 
 cleaned as (

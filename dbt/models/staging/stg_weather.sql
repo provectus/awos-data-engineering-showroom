@@ -5,7 +5,7 @@
 }}
 
 with source as (
-    select * from raw_weather.daily_weather
+    select * from {{ source('raw_weather', 'daily_weather') }}
 ),
 
 cleaned as (

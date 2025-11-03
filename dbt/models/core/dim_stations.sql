@@ -33,7 +33,7 @@ final as (
         first(station_name) as station_name,
         count(*) as name_variations
     from all_stations
-    where station_id is not null and station_id != ''
+    where station_id is not null
     group by station_id
 )
 
