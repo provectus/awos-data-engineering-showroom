@@ -262,14 +262,6 @@ Navigate to the "Weather" page to see weather impact analysis.
 #### Initialize Airflow
 ```bash
 export AIRFLOW_HOME=./airflow
-uv run airflow db init
-uv run airflow users create \
-    --username admin \
-    --firstname Admin \
-    --lastname User \
-    --role Admin \
-    --email admin@example.com \
-    --password admin
 ```
 
 #### Start Airflow
