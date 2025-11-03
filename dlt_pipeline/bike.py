@@ -136,7 +136,7 @@ def parse_bike_data(csv_files: list[Path], month_str: str) -> Iterator[dict[str,
         logger.info("Extracted %d records from %s", len(records), csv_file.name)
 
         # Yield records in batches for memory efficiency
-        batch_size = 10000
+        batch_size = 1000000
         for i in range(0, len(records), batch_size):
             batch = records[i : i + batch_size]
             yield from batch
