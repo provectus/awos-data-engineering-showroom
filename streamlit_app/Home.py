@@ -45,17 +45,14 @@ def load_demand_data():
 
 @st.cache_data(ttl=600)
 def load_station_stats():
-    """Load station usage statistics."""
+    """Load station usage statistics from the marts layer."""
     con = get_db_connection()
     query = """
         SELECT
-            s.station_name,
-            COUNT(DISTINCT t.ride_id) as trip_count
-        FROM main_core.dim_stations s
-        JOIN main_staging.stg_bike_trips t
-            ON s.station_id = t.start_station_id
-        GROUP BY s.station_name
-        ORDER BY trip_count DESC
+            station_name,
+            start_trip_count as trip_count
+        FROM main_marts.mart_station_stats
+        ORDER BY start_trip_count DESC
         LIMIT 10
     """
     try:
@@ -157,8 +154,10 @@ def main():
     station_df = load_station_stats()
 
     if not station_df.empty:
+        # Show most popular stations on top
+        station_df_sorted = station_df.sort_values("trip_count", ascending=False)
         fig_stations = px.bar(
-            station_df,
+            station_df_sorted,
             x="trip_count",
             y="station_name",
             orientation="h",
