@@ -1,0 +1,107 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "weather_suite",
+  "expectations": [
+    {
+      "expectation_type": "expect_column_to_exist",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_to_exist",
+      "kwargs": {
+        "column": "tmax"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_to_exist",
+      "kwargs": {
+        "column": "tmin"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {
+        "notes": "Date is the primary key"
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_unique",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {
+        "notes": "Each date should appear only once"
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "tmax",
+        "min_value": -30,
+        "max_value": 45,
+        "mostly": 0.99
+      },
+      "meta": {
+        "notes": "Maximum temperature should be within plausible range for NYC (-30°C to 45°C)"
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "tmin",
+        "min_value": -30,
+        "max_value": 45,
+        "mostly": 0.99
+      },
+      "meta": {
+        "notes": "Minimum temperature should be within plausible range for NYC"
+      }
+    },
+    {
+      "expectation_type": "expect_column_pair_values_a_to_be_greater_than_or_equal_to_b",
+      "kwargs": {
+        "column_A": "tmax",
+        "column_B": "tmin",
+        "or_equal": true
+      },
+      "meta": {
+        "notes": "Maximum temperature must be >= minimum temperature"
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "precip",
+        "min_value": 0,
+        "max_value": 500
+      },
+      "meta": {
+        "notes": "Precipitation should be non-negative"
+      }
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "wind_max",
+        "min_value": 0,
+        "max_value": 200
+      },
+      "meta": {
+        "notes": "Wind speed should be non-negative"
+      }
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "great_expectations_version": "1.8.1"
+  }
+}
+

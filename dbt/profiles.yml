@@ -1,0 +1,20 @@
+weather_bike_demo:
+  outputs:
+    dev:
+      type: duckdb
+      path: ./duckdb/warehouse.duckdb
+      threads: 4
+      extensions:
+        - httpfs
+        - parquet
+    
+    prod:
+      type: duckdb
+      path: ./duckdb/warehouse.duckdb
+      threads: 8
+      extensions:
+        - httpfs
+        - parquet
+  
+  target: dev
+

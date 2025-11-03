@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  - name: stg_bike_trips
+    description: "Cleaned and normalized bike trip data from raw ingestion"
+    columns:
+      - name: ride_id
+        description: "Unique identifier for each trip"
+        tests:
+          - unique
+          - not_null
+      
+      - name: started_at
+        description: "Trip start timestamp"
+        tests:
+          - not_null
+      
+      - name: ended_at
+        description: "Trip end timestamp"
+        tests:
+          - not_null
+      
+      - name: ride_date
+        description: "Date of the trip (truncated from started_at)"
+        tests:
+          - not_null
+      
+      - name: ride_mins
+        description: "Duration of the trip in minutes"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 720
+      
+      - name: member_casual
+        description: "Type of rider: member or casual"
+        tests:
+          - accepted_values:
+              values: ['member', 'casual']
+
+  - name: stg_weather
+    description: |
+      Cleaned weather data from Open-Meteo API.
+      
+      Note: This model preserves records with partial temperature data (NULL tmax or tmin)
+      to retain valuable precipitation and wind observations. The tmax >= tmin constraint
+      is only enforced when both temperature values are present.
+    columns:
+      - name: date
+        description: "Date of weather observation"
+        tests:
+          - unique
+          - not_null
+      
+      - name: tmax
+        description: "Maximum temperature in Celsius (may be NULL for some records)"
+      
+      - name: tmin
+        description: "Minimum temperature in Celsius (may be NULL for some records)"
+      
+      - name: precip
+        description: "Precipitation sum in mm"
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+      
+      - name: wind_max
+        description: "Maximum wind speed in km/h"
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+

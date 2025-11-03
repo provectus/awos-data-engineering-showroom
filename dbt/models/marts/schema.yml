@@ -1,0 +1,65 @@
+version: 2
+
+models:
+  - name: mart_demand_daily
+    description: "Daily bike demand metrics for business analytics"
+    columns:
+      - name: ride_date
+        description: "Date of observation"
+        tests:
+          - unique
+          - not_null
+      
+      - name: trips_total
+        description: "Total number of trips"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+      
+      - name: member_trips
+        description: "Number of member trips"
+        tests:
+          - not_null
+      
+      - name: casual_trips
+        description: "Number of casual trips"
+        tests:
+          - not_null
+      
+      - name: day_type
+        description: "Weekday or Weekend"
+        tests:
+          - accepted_values:
+              values: ['Weekday', 'Weekend']
+
+  - name: mart_weather_effect
+    description: "Bike demand enriched with weather data for impact analysis"
+    columns:
+      - name: date
+        description: "Date of observation"
+        tests:
+          - unique
+          - not_null
+      
+      - name: trips_total
+        description: "Total number of trips"
+        tests:
+          - not_null
+      
+      - name: temp_category
+        description: "Categorized temperature range"
+        tests:
+          - accepted_values:
+              values: ['Very Cold', 'Cold', 'Moderate', 'Warm']
+              config:
+                severity: warn
+      
+      - name: rain_category
+        description: "Categorized precipitation level"
+        tests:
+          - accepted_values:
+              values: ['No Rain', 'Light Rain', 'Heavy Rain']
+              config:
+                severity: warn
+

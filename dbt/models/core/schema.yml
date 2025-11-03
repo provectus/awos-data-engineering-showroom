@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: dim_stations
+    description: "Dimension table of all bike stations"
+    columns:
+      - name: station_id
+        description: "Unique station identifier"
+        tests:
+          - unique
+          - not_null
+      
+      - name: station_name
+        description: "Name of the station"
+        tests:
+          - not_null
+
+  - name: fct_trips_daily
+    description: "Daily aggregated trip facts by member type"
+    columns:
+      - name: ride_date
+        description: "Date of trips"
+        tests:
+          - not_null
+      
+      - name: member_casual
+        description: "Rider type"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['member', 'casual']
+      
+      - name: trips
+        description: "Number of trips"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "> 0"
+      
+      - name: avg_duration_mins
+        description: "Average trip duration in minutes"
+        tests:
+          - not_null
+
