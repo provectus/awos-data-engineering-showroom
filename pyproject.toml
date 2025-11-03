@@ -10,6 +10,7 @@ dependencies = [
     "apache-airflow-providers-common-sql>=1.28.2",
     "dbt-duckdb>=1.9.6",
     "dlt[duckdb]>=1.18.1",
+    "duckdb-engine>=0.17.0",
     "great-expectations>=1.8.1",
     "jupyter>=1.1.1",
     "matplotlib>=3.10.7",

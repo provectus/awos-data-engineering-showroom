@@ -1,0 +1,22 @@
+{
+  "data": {
+    "asset": {
+      "id": "a294818e-4ec8-4584-9e86-c2daa06d5ada",
+      "name": "bike_trips"
+    },
+    "batch_definition": {
+      "id": "39fc41bd-26b7-48c1-a652-98786b1f22f8",
+      "name": "bike_trips_batch"
+    },
+    "datasource": {
+      "id": "da34ce78-7b21-4992-b456-cf27a9fb28df",
+      "name": "bike_datasource"
+    }
+  },
+  "id": "c5eff3ac-f810-49e2-a743-9cbc9f59dbe2",
+  "name": "bike_trips_validation",
+  "suite": {
+    "id": "b8d6fd48-a6d1-4147-a9d5-4dbe9d5bdc89",
+    "name": "bike_trips_suite"
+  }
+}

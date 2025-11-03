@@ -1,0 +1,12 @@
+{
+  "actions": [],
+  "id": "6f21a376-651c-425b-b8dc-07a2898a7628",
+  "name": "bike_trips_checkpoint",
+  "result_format": "SUMMARY",
+  "validation_definitions": [
+    {
+      "id": "4e99fdb1-cecb-4551-8661-59a93ada2a15",
+      "name": "bike_trips_validation"
+    }
+  ]
+}

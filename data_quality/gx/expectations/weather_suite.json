@@ -1,0 +1,93 @@
+{
+  "expectations": [
+    {
+      "id": "424155be-d48e-431d-b1bf-807c9fbdde75",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "8d084a95-4e77-43f0-a4d7-01952eb3d627",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "a1c206b2-550e-4ba9-97cb-f658aaf6979e",
+      "kwargs": {
+        "column": "tmax",
+        "max_value": 50.0,
+        "min_value": -50.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "4170109c-7b7a-414c-bc2c-0503e0a37bc7",
+      "kwargs": {
+        "column": "tmin",
+        "max_value": 50.0,
+        "min_value": -50.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "0642ee00-e2d5-4297-b151-a495b4c46ac4",
+      "kwargs": {
+        "column_A": "tmax",
+        "column_B": "tmin",
+        "mostly": 0.99,
+        "or_equal": true
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_pair_values_a_to_be_greater_than_b"
+    },
+    {
+      "id": "e9d3f390-a002-406d-abd1-342680a5696f",
+      "kwargs": {
+        "column": "precip",
+        "max_value": 1000.0,
+        "min_value": 0.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "9c584440-1082-4b1b-b8dd-718cd66b95f0",
+      "kwargs": {
+        "column": "wind_max",
+        "max_value": 200.0,
+        "min_value": 0.0
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "744dca6e-7bb7-4f91-82ad-89d1d877fa09",
+      "kwargs": {
+        "min_value": 1
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_table_row_count_to_be_between"
+    }
+  ],
+  "id": "e5099019-c93f-4db0-ab7f-4d1e19e3958a",
+  "meta": {
+    "great_expectations_version": "1.8.1"
+  },
+  "name": "weather_suite",
+  "notes": null
+}

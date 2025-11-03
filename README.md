@@ -1,6 +1,6 @@
 # 🚲 Weather-Aware Bike Demand Platform
 
-A production-ready data platform demo showcasing modern data stack with incremental value from adding data sources. This project demonstrates a complete end-to-end data pipeline analyzing NYC bike-share demand and weather impact.
+A data platform demo showcasing modern data stack with incremental value from adding new data sources. This project demonstrates a complete end-to-end data pipeline analyzing NYC bike-share demand and weather impact.
 
 ## 📋 Table of Contents
 
@@ -34,11 +34,11 @@ This project demonstrates a complete data pipeline that:
 ### Key Features
 
 ✅ **Idempotent Data Ingestion** - dlt ensures reliable, incremental loads  
-✅ **Data Quality Gates** - Great Expectations validates every stage  
+✅ **Data Quality Gates** - Great Expectations validates after data ingestion and transformation
 ✅ **Modular Transformations** - dbt provides testable, documented models  
 ✅ **End-to-End Orchestration** - Airflow manages the complete workflow  
 ✅ **Interactive Analytics** - Streamlit dashboards for self-service insights  
-✅ **Modern Development** - uv for fast dependency management, ruff for code quality  
+✅ **Modern Development** - uv for fast dependency management, ruff for code quality
 
 ## 🏗️ Architecture
 
@@ -51,25 +51,31 @@ This project demonstrates a complete data pipeline that:
          ▼                           ▼
     ┌────────────────────────────────────┐
     │        dlt Ingestion Layer         │
-    │  (HTTP → DuckDB Raw Tables)        │
+    │      (HTTP → DuckDB Raw Tables)    │
     └────────┬───────────────────────────┘
              │
              ▼
     ┌────────────────────────────────────┐
-    │   Great Expectations Validation     │
-    │  (Data Quality Checks & Reports)    │
+    │   Great Expectations Validation    │
+    │    (Input data quality checks)     │
     └────────┬───────────────────────────┘
              │
              ▼
     ┌────────────────────────────────────┐
-    │      dbt Transformation Layer       │
-    │  Staging → Core → Marts            │
+    │      dbt Transformation Layer      │
+    │       Staging → Core → Marts       │
     └────────┬───────────────────────────┘
              │
              ▼
     ┌────────────────────────────────────┐
-    │        DuckDB Warehouse             │
+    │        DuckDB Warehouse            │
     │  (Optimized Analytics Tables)      │
+    └────────┬───────────────────────────┘
+             │
+             ▼
+    ┌────────────────────────────────────┐
+    │   Great Expectations Validation    │
+    │    (Transformed Quality Checks)    │
     └────────┬───────────────────────────┘
              │
       ┌──────┴──────┐
@@ -111,13 +117,15 @@ weather-bike-demo/
 │   ├── weather.py                   # Weather data ingestion
 │   └── .dlt/
 │       └── config.toml              # dlt configuration
-├── great_expectations/
-│   ├── great_expectations.yml       # GE configuration
-│   ├── expectations/                # Data validation suites
-│   │   ├── bike_trips_suite.json
-│   │   └── weather_suite.json
-│   ├── checkpoints/                 # Validation checkpoints
-│   └── validate_data.py             # Helper validation script
+├── data_quality/
+│   ├── gx/                          # Great Expectations directory
+│   │   ├── great_expectations.yml   # GE configuration
+│   │   ├── expectations/            # Data validation suites
+│   │   ├── checkpoints/             # Validation checkpoints
+│   │   └── uncommitted/             # Validation results (git-ignored)
+│   ├── validate_bike_data.py        # Bike validation script
+│   ├── validate_weather_data.py     # Weather validation script
+│   └── validate_all.py              # Run all validations
 ├── dbt/
 │   ├── dbt_project.yml              # dbt project config
 │   ├── profiles.yml                 # Database connections
@@ -163,7 +171,7 @@ weather-bike-demo/
 1. **Clone the repository**
 ```bash
 git clone <repository-url>
-cd weather-bike-demo
+cd data-platform-ai-native
 ```
 
 2. **Install dependencies with uv**
@@ -196,8 +204,16 @@ This downloads May-June 2024 NYC Citi Bike data and loads it into DuckDB.
 
 #### Step 2: Validate Bike Data
 ```bash
-uv run python great_expectations/validate_data.py bike
+uv run python data_quality/validate_bike_data.py
 ```
+
+This runs comprehensive data quality checks including:
+- Column nullability and uniqueness
+- Value ranges and accepted values
+- Data type validations
+- Row count checks
+
+Results are saved to Data Docs for detailed inspection.
 
 #### Step 3: Run dbt Transformations (Bike Only)
 ```bash
@@ -220,7 +236,12 @@ uv run python dlt_pipeline/weather.py
 
 #### Step 6: Validate Weather Data
 ```bash
-uv run python great_expectations/validate_data.py weather
+uv run python data_quality/validate_weather_data.py
+```
+
+Or validate all data sources at once:
+```bash
+uv run python data_quality/validate_all.py
 ```
 
 #### Step 7: Re-run dbt with Weather
@@ -269,7 +290,7 @@ Or use the Airflow UI at http://localhost:8080 (login: admin/admin)
 
 ## 🎬 Demo Walkthrough
 
-### Act 1: Single Source Demo (5-7 minutes)
+### Act 1: Single Source Demo
 
 **Goal**: Show value from bike trip data alone
 
@@ -278,8 +299,9 @@ Or use the Airflow UI at http://localhost:8080 (login: admin/admin)
    - Point out dlt's idempotent loading (run twice to show no duplicates)
 
 2. **Demonstrate Data Quality**
-   - Run Great Expectations validation
-   - Show validation reports in `great_expectations/uncommitted/data_docs/`
+   - Run Great Expectations validation: `uv run python data_quality/validate_bike_data.py`
+   - Show validation reports in `data_quality/gx/uncommitted/data_docs/local_site/`
+   - Highlight key expectations: nullability, uniqueness, value ranges
 
 3. **Explore Transformations**
    - Show dbt models structure
@@ -294,13 +316,14 @@ Or use the Airflow UI at http://localhost:8080 (login: admin/admin)
 
 **Key Message**: "We have a working pipeline with one data source providing valuable insights."
 
-### Act 2: Add Weather Source (7-9 minutes)
+### Act 2: Add Weather Source
 
 **Goal**: Demonstrate incremental value of adding weather data
 
 1. **Add New Data Source**
-   - Run weather ingestion
-   - Show Great Expectations catching any quality issues
+   - Run weather ingestion: `uv run python dlt_pipeline/weather.py`
+   - Validate weather data: `uv run python data_quality/validate_weather_data.py`
+   - Show Great Expectations catching any quality issues (e.g., tmax >= tmin)
 
 2. **Show Enhanced Models**
    - Display new dbt models (stg_weather, mart_weather_effect)
@@ -377,19 +400,32 @@ uv run jupyter lab
 - **Weather Pipeline Tests**: Mock API calls, verify error handling
 - **dbt Tests**: Schema tests, data quality tests defined in YAML
 
-### Integration Tests
-
-Run the entire pipeline end-to-end:
-```bash
-./run_integration_test.sh
-```
-
 ### Data Quality Tests
 
-Great Expectations suites run automatically in the pipeline. To run manually:
+Great Expectations validates data at every stage. The data_quality directory contains:
+
+- **Expectation Suites**: Define data quality rules
+  - `bike_trips_suite`: expectations for bike trip data
+  - `weather_suite`: expectations for weather data
+- **Checkpoints**: Execute validation workflows
+- **Validation Scripts**: Standalone scripts for manual validation
+
+To run validations manually:
 ```bash
-uv run python great_expectations/validate_data.py bike
-uv run python great_expectations/validate_data.py weather
+# Validate bike trips data
+uv run python data_quality/validate_bike_data.py
+
+# Validate weather data
+uv run python data_quality/validate_weather_data.py
+
+# Validate all data sources
+uv run python data_quality/validate_all.py
+```
+
+View detailed validation results in Data Docs:
+```bash
+# Open Data Docs in browser
+open data_quality/gx/uncommitted/data_docs/local_site/index.html
 ```
 
 ## 🔧 Troubleshooting
@@ -468,7 +504,3 @@ MIT License - see LICENSE file for details
 - NYC Citi Bike for open data
 - Open-Meteo for weather API
 - dlt, dbt, Great Expectations, and Streamlit communities
-
----
-
-**Built with ❤️ to demonstrate modern data platform architecture**

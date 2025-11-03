@@ -1,0 +1,155 @@
+{
+  "expectations": [
+    {
+      "id": "8eafe67c-d06a-43a5-b751-540e7993861d",
+      "kwargs": {
+        "column": "ride_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b62ed5ff-bace-4963-bad3-ea1dbb43d1c8",
+      "kwargs": {
+        "column": "ride_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "a5d22ca3-2293-4679-ac40-88afacf8ab4a",
+      "kwargs": {
+        "column": "started_at"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "f4ea3f81-774a-43b7-a4b7-6429d04c8c47",
+      "kwargs": {
+        "column": "ended_at"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "abcba372-f391-4b27-be2d-a85c0553a4f8",
+      "kwargs": {
+        "column": "ride_mins"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "e771d1ea-5846-487c-95fa-c2773bef0f55",
+      "kwargs": {
+        "column": "ride_mins",
+        "max_value": 720.0,
+        "min_value": 1.0,
+        "mostly": 0.99
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "6ffc6f6e-7faf-4429-9962-3409ab8cea77",
+      "kwargs": {
+        "column": "member_casual"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "5d6dd0c5-b183-4a8c-b16a-a8ad72b7ce13",
+      "kwargs": {
+        "column": "member_casual",
+        "value_set": [
+          "member",
+          "casual"
+        ]
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_in_set"
+    },
+    {
+      "id": "45c39707-c139-4576-accc-da65094ff92c",
+      "kwargs": {
+        "column": "rideable_type"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "f11cf7e9-3cc4-429a-a38e-a19902b79f0f",
+      "kwargs": {
+        "column": "start_lat",
+        "max_value": 41.0,
+        "min_value": 40.5,
+        "mostly": 0.99
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "d4796497-7fb2-4a58-9b76-9ae15b5d9627",
+      "kwargs": {
+        "column": "start_lng",
+        "max_value": -73.7,
+        "min_value": -74.3,
+        "mostly": 0.99
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "405e2c55-c2db-4e9e-8cce-23dafeacbdd6",
+      "kwargs": {
+        "column": "end_lat",
+        "max_value": 41.0,
+        "min_value": 40.5,
+        "mostly": 0.99
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "75b3df92-12cc-4bda-aba7-eece946fbddb",
+      "kwargs": {
+        "column": "end_lng",
+        "max_value": -73.7,
+        "min_value": -74.3,
+        "mostly": 0.99
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_between"
+    },
+    {
+      "id": "280790c9-fc6c-498c-bcb5-e5b1c87cab8f",
+      "kwargs": {
+        "min_value": 1
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_table_row_count_to_be_between"
+    }
+  ],
+  "id": "0b925ab7-13c3-41f7-a727-bd6a37cae926",
+  "meta": {
+    "great_expectations_version": "1.8.1"
+  },
+  "name": "bike_trips_suite",
+  "notes": null
+}

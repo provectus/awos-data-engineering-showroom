@@ -44,11 +44,6 @@ airflow/*.db
 airflow/*.pid
 airflow/airflow-webserver.pid
 
-# Great Expectations
-great_expectations/uncommitted/
-great_expectations/validations/
-great_expectations/.ge_store_backend_id
-
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb_checkpoints
@@ -72,6 +67,10 @@ dbt/logs/
 
 # Cache
 .cache/
+
+# Great Expectations
+data_quality/gx/uncommitted/
+data_quality/gx/plugins/
 
 # Data files (optional, uncomment if needed)
 # *.csv

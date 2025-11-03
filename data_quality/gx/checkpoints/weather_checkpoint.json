@@ -1,0 +1,12 @@
+{
+  "actions": [],
+  "id": "782589d7-2506-497c-a788-07bfc9399615",
+  "name": "weather_checkpoint",
+  "result_format": "SUMMARY",
+  "validation_definitions": [
+    {
+      "id": "f49919a5-7701-4269-8c7a-e73e553c6b0d",
+      "name": "weather_validation"
+    }
+  ]
+}
