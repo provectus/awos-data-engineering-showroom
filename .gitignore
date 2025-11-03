@@ -70,6 +70,9 @@ dbt/logs/
 *~
 .DS_Store
 
+# Cache
+.cache/
+
 # Data files (optional, uncomment if needed)
 # *.csv
 # *.parquet
