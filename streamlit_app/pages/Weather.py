@@ -24,7 +24,7 @@ st.set_page_config(
 @st.cache_resource
 def get_db_connection():
     """Create and cache DuckDB connection."""
-    return duckdb.connect("./duckdb/warehouse.duckdb", read_only=True)
+    return duckdb.connect("duckdb/warehouse.duckdb", read_only=True)
 
 
 @st.cache_data(ttl=600)
@@ -33,7 +33,7 @@ def load_weather_effect_data():
     con = get_db_connection()
     query = """
         SELECT *
-        FROM marts.mart_weather_effect
+        FROM main_marts.mart_weather_effect
         ORDER BY date
     """
     try:

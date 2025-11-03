@@ -23,7 +23,7 @@ st.set_page_config(
 @st.cache_resource
 def get_db_connection():
     """Create and cache DuckDB connection."""
-    return duckdb.connect("./duckdb/warehouse.duckdb", read_only=True)
+    return duckdb.connect("duckdb/warehouse.duckdb", read_only=True)
 
 
 @st.cache_data(ttl=600)
@@ -32,7 +32,7 @@ def load_demand_data():
     con = get_db_connection()
     query = """
         SELECT *
-        FROM marts.mart_demand_daily
+        FROM main_marts.mart_demand_daily
         ORDER BY ride_date
     """
     try:
@@ -51,8 +51,8 @@ def load_station_stats():
         SELECT
             s.station_name,
             COUNT(DISTINCT t.ride_id) as trip_count
-        FROM core.dim_stations s
-        JOIN staging.stg_bike_trips t
+        FROM main_core.dim_stations s
+        JOIN main_staging.stg_bike_trips t
             ON s.station_id = t.start_station_id
         GROUP BY s.station_name
         ORDER BY trip_count DESC
