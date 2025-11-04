@@ -17,16 +17,16 @@ This task list follows a **vertical slicing** methodology where each main task r
 
 Set up the basic holiday data pipeline to fetch and store holiday data, verifying the data is accessible in DuckDB.
 
-- [ ] Create `dlt_pipeline/holidays.py` with basic structure:
-  - [ ] Sub-task: Define `@dlt.resource` function that fetches US holidays from Nager.Date API for 2024 and 2025
-  - [ ] Sub-task: Implement filtering logic to include only nationwide holidays OR NY-specific holidays
-  - [ ] Sub-task: Configure dlt pipeline with `merge` write disposition, primary key `date`, output to `duckdb/holiday_ingestion.duckdb`
-  - [ ] Sub-task: Add error handling (try-except blocks, retry logic with 3 attempts, timeout 30s)
-  - [ ] Sub-task: Add logging at INFO level for pipeline progress
-  - [ ] Sub-task: Create `run_holiday_pipeline()` function and `if __name__ == "__main__"` block for manual execution
-- [ ] Test the pipeline runs successfully:
-  - [ ] Sub-task: Execute `uv run python dlt_pipeline/holidays.py`
-  - [ ] Sub-task: Verify data exists in `duckdb/holiday_ingestion.duckdb` using DuckDB CLI or Python query (expect ~30-40 holidays)
+- [x] Create `dlt_pipeline/holidays.py` with basic structure:
+  - [x] Sub-task: Define `@dlt.resource` function that fetches US holidays from Nager.Date API for 2024 and 2025
+  - [x] Sub-task: Implement filtering logic to include only nationwide holidays OR NY-specific holidays
+  - [x] Sub-task: Configure dlt pipeline with `merge` write disposition, primary key `date`, output to `duckdb/holiday_ingestion.duckdb`
+  - [x] Sub-task: Add error handling (try-except blocks, retry logic with 3 attempts, timeout 30s)
+  - [x] Sub-task: Add logging at INFO level for pipeline progress
+  - [x] Sub-task: Create `run_holiday_pipeline()` function and `if __name__ == "__main__"` block for manual execution
+- [x] Test the pipeline runs successfully:
+  - [x] Sub-task: Execute `uv run python dlt_pipeline/holidays.py`
+  - [x] Sub-task: Verify data exists in `duckdb/holiday_ingestion.duckdb` using DuckDB CLI or Python query (expect ~30-40 holidays)
 
 **Validation:** Pipeline runs without errors and creates `holiday_ingestion.duckdb` with holiday data.
 
@@ -36,15 +36,15 @@ Set up the basic holiday data pipeline to fetch and store holiday data, verifyin
 
 Create the dbt staging model to clean and standardize raw holiday data, making it queryable.
 
-- [ ] Create dbt staging model for holidays:
-  - [ ] Sub-task: Create `dbt/models/staging/stg_holidays.sql` that selects from `{{ source('raw_holidays', 'us_holidays') }}`
-  - [ ] Sub-task: Add transformations: cast `date` to DATE, cast booleans, trim whitespace, handle NULLs in `counties`
-  - [ ] Sub-task: Set materialization to `view` in model config
-  - [ ] Sub-task: Add source definition in `dbt/models/staging/sources.yml` (or update existing) for `raw_holidays.us_holidays`
-- [ ] Add dbt tests for staging model:
-  - [ ] Sub-task: Update `dbt/models/staging/schema.yml` with tests: `date` (unique, not_null), `is_nationwide` (not_null, accepted_values), `is_fixed` (not_null, accepted_values), `holiday_name` (not_null)
-  - [ ] Sub-task: Run `cd dbt && uv run dbt build --select stg_holidays`
-  - [ ] Sub-task: Verify staging model created and tests pass
+- [x] Create dbt staging model for holidays:
+  - [x] Sub-task: Create `dbt/models/staging/stg_holidays.sql` that selects from `{{ source('raw_holidays', 'us_holidays') }}`
+  - [x] Sub-task: Add transformations: cast `date` to DATE, cast booleans, trim whitespace, handle NULLs in `counties`
+  - [x] Sub-task: Set materialization to `view` in model config
+  - [x] Sub-task: Add source definition in `dbt/models/staging/sources.yml` (or update existing) for `raw_holidays.us_holidays`
+- [x] Add dbt tests for staging model:
+  - [x] Sub-task: Update `dbt/models/staging/schema.yml` with tests: `date` (unique, not_null), `is_nationwide` (not_null, accepted_values), `is_fixed` (not_null, accepted_values), `holiday_name` (not_null)
+  - [x] Sub-task: Run `cd dbt && uv run dbt build --select stg_holidays`
+  - [x] Sub-task: Verify staging model created and tests pass
 
 **Validation:** `stg_holidays` view exists and passes all dbt tests. Can query holidays via dbt.
 
@@ -54,19 +54,19 @@ Create the dbt staging model to clean and standardize raw holiday data, making i
 
 Create the analytics mart that joins holidays to bike trip data, enabling basic holiday analysis (raw trip counts only, no weather adjustment yet).
 
-- [ ] Create `mart_holiday_analysis` with basic functionality:
-  - [ ] Sub-task: Create `dbt/models/marts/mart_holiday_analysis.sql`
-  - [ ] Sub-task: LEFT JOIN `mart_demand_daily` with `stg_holidays` on `ride_date = date`
-  - [ ] Sub-task: Add computed columns: `is_holiday`, `holiday_name`, `holiday_category` (derived from `holiday_types`), `trips_total`, `tmax`, `precip`, `day_type`
-  - [ ] Sub-task: Calculate `baseline_daily_trips` as AVG of non-holiday trips
-  - [ ] Sub-task: Calculate `demand_vs_baseline_pct` using raw trip counts
-  - [ ] Sub-task: Set materialization to `table` for query performance
-  - [ ] Sub-task: Add placeholder column `trips_weather_adjusted` (initially equals `trips_total` - we'll implement normalization in next slice)
-- [ ] Add dbt tests for mart:
-  - [ ] Sub-task: Update `dbt/models/marts/schema.yml` with tests: `ride_date` (unique, not_null), `is_holiday` (not_null, accepted_values), `demand_vs_baseline_pct` (accepted_range -100 to 500)
-  - [ ] Sub-task: Add row count test: verify `mart_holiday_analysis` has same row count as `mart_demand_daily` (LEFT JOIN preservation)
-  - [ ] Sub-task: Run `cd dbt && uv run dbt build --select mart_holiday_analysis`
-  - [ ] Sub-task: Verify mart table created and tests pass
+- [x] Create `mart_holiday_analysis` with basic functionality:
+  - [x] Sub-task: Create `dbt/models/marts/mart_holiday_analysis.sql`
+  - [x] Sub-task: LEFT JOIN `mart_demand_daily` with `stg_holidays` on `ride_date = date`
+  - [x] Sub-task: Add computed columns: `is_holiday`, `holiday_name`, `holiday_category` (derived from `holiday_types`), `trips_total`, `tmax`, `precip`, `day_type`
+  - [x] Sub-task: Calculate `baseline_daily_trips` as AVG of non-holiday trips
+  - [x] Sub-task: Calculate `demand_vs_baseline_pct` using raw trip counts
+  - [x] Sub-task: Set materialization to `table` for query performance
+  - [x] Sub-task: Add placeholder column `trips_weather_adjusted` (initially equals `trips_total` - we'll implement normalization in next slice)
+- [x] Add dbt tests for mart:
+  - [x] Sub-task: Update `dbt/models/marts/schema.yml` with tests: `ride_date` (unique, not_null), `is_holiday` (not_null, accepted_values), `demand_vs_baseline_pct` (accepted_range -100 to 500)
+  - [x] Sub-task: Add row count test: verify `mart_holiday_analysis` has same row count as `mart_demand_daily` (LEFT JOIN preservation)
+  - [x] Sub-task: Run `cd dbt && uv run dbt build --select mart_holiday_analysis`
+  - [x] Sub-task: Verify mart table created and tests pass
 
 **Validation:** `mart_holiday_analysis` table exists, joins work correctly, basic metrics are calculated. Weather normalization is placeholder for now.
 
@@ -288,9 +288,9 @@ Update documentation and add final touches to prepare for deployment.
 ## Progress Tracking
 
 **Total Slices:** 13
-**Completed:** 0
+**Completed:** 3
 **In Progress:** 0
-**Remaining:** 13
+**Remaining:** 10
 
 ---
 

@@ -15,6 +15,9 @@ weather_bike_demo:
         - path: ../duckdb/weather_ingestion.duckdb
           alias: weather_ingestion
           read_only: true
+        - path: ../duckdb/holiday_ingestion.duckdb
+          alias: holiday_ingestion
+          read_only: true
     
     prod:
       type: duckdb
@@ -30,6 +33,9 @@ weather_bike_demo:
           read_only: true
         - path: ../duckdb/weather_ingestion.duckdb
           alias: weather_ingestion
+          read_only: true
+        - path: ../duckdb/holiday_ingestion.duckdb
+          alias: holiday_ingestion
           read_only: true
   
   target: dev
