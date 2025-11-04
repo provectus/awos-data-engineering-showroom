@@ -40,6 +40,12 @@ known-first-party = ["dlt_pipeline", "streamlit_app"]
 "notebooks/*.py" = ["T201"]
 "airflow/dags/*.py" = ["E402"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
 [dependency-groups]
 dev = [
     "pytest>=8.4.2",
