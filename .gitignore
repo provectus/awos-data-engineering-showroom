@@ -76,3 +76,6 @@ data_quality/gx/plugins/
 # *.csv
 # *.parquet
 # *.json
+
+# Claude
+.claude/*.local.json
