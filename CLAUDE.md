@@ -4,9 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a data product for NYC Citi Bike demand analytics. The platform ingests bike trip and weather data, validates quality, transforms into analytics-ready models, and visualizes insights through interactive dashboards.
-
-**Core Value Proposition**: Demonstrates incremental value of adding data sources to analytics - starting with bike trips alone, then enriching with weather data to unlock correlation analysis.
+This is a data product for NYC Citi Bike demand analytics. The project ingests bike trip and weather data, validates quality, transforms into analytics-ready models, and visualizes insights through interactive dashboards.
 
 ## Tech Stack
 
@@ -106,12 +104,8 @@ cd ..
 # Set Airflow home directory
 export AIRFLOW_HOME=./airflow
 
-# Start Airflow scheduler (Terminal 1)
-uv run airflow scheduler
-
-# Start Airflow webserver (Terminal 2)
-uv run airflow webserver --port 8080
-# Access UI at http://localhost:8080 (login: admin/admin)
+# Start Airflow standalone version
+uv run airflow standalone
 
 # Trigger DAG manually
 uv run airflow dags trigger bike_weather_pipeline
