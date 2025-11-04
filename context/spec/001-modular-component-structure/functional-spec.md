@@ -31,7 +31,7 @@ Each module must have a standardized internal structure:
 - **Acceptance Criteria:**
   - [ ] Each Python module contains an `__init__.py` file
   - [ ] Each module has a `CLAUDE.md` file documenting module-specific patterns and practices
-  - [ ] Each module has a `tests/` subdirectory for module-specific tests
+  - [ ] Each module might have a `tests/` subdirectory for module-specific tests (if it's a python module)
   - [ ] Each module has a `Makefile` with standardized targets (where applicable)
   - [ ] Module names use lowercase with underscores (e.g., `dlt_pipeline/`, `data_quality/`)
   - [ ] Python files within modules use snake_case naming (e.g., `bike_pipeline.py`)
@@ -44,7 +44,6 @@ Modules must communicate through explicit, documented interfaces:
 
 - **Acceptance Criteria:**
   - [ ] Each module that produces data specifies its output location in its native configuration file (e.g., dlt uses `.dlt/config.toml`, dbt uses `profiles.yml`)
-  - [ ] Downstream modules reference upstream output paths explicitly in their configuration
   - [ ] Each module's `CLAUDE.md` documents its dependencies with a "Prerequisites/Dependencies" section stating: "This module requires: [X module's output at Y path]"
   - [ ] Data flow uses DuckDB file paths as the primary mechanism (e.g., dbt attaches to `bike_ingestion.duckdb` and `weather_ingestion.duckdb`)
   - [ ] Dependencies are visible and traceable by reading configuration files
@@ -68,7 +67,6 @@ Common patterns must be documented at the root level and applied consistently:
     - Python coding style (ruff configuration)
     - Logging format (consistent `logging.basicConfig()` format string across all modules)
     - Error handling approaches
-    - Git workflow conventions
   - [ ] All Python modules use the same logger format as specified in root `CLAUDE.md`
   - [ ] All Python modules follow the ruff linting configuration defined at project root
   - [ ] Module-specific exceptions are acceptable, but naming conventions are documented in each module's `CLAUDE.md`
