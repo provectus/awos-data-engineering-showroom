@@ -185,4 +185,4 @@ models:
                 severity: warn
 
       - name: trips_weather_adjusted
-        description: Weather-adjusted trip count (placeholder - equals trips_total in Slice 3, actual normalization in Slice 4)
+        description: Weather-adjusted trip count normalized to baseline conditions (20.3°C, 3.1mm precip). Uses 1.5% adjustment per degree C from baseline and logarithmic decay for precipitation (3% per mm with diminishing returns). Capped at 4x adjustment to avoid extreme values.

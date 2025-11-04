@@ -76,12 +76,12 @@ Create the analytics mart that joins holidays to bike trip data, enabling basic 
 
 Enhance the mart with weather-adjusted demand calculations.
 
-- [ ] Implement weather normalization in `mart_holiday_analysis`:
-  - [ ] Sub-task: Review `mart_weather_effect.sql` for existing weather normalization patterns
-  - [ ] Sub-task: Update `mart_holiday_analysis.sql` to calculate `trips_weather_adjusted` using temperature and precipitation effects (formula: `trips_total * (avg_weather_factor / actual_weather_factor)`)
-  - [ ] Sub-task: Update `demand_vs_baseline_pct` to use weather-adjusted trips for comparison
-  - [ ] Sub-task: Run `cd dbt && uv run dbt build --select mart_holiday_analysis`
-  - [ ] Sub-task: Validate: Query mart to compare raw vs. adjusted trips for a known holiday (e.g., Memorial Day) - adjusted should differ based on weather
+- [x] Implement weather normalization in `mart_holiday_analysis`:
+  - [x] Sub-task: Review `mart_weather_effect.sql` for existing weather normalization patterns
+  - [x] Sub-task: Update `mart_holiday_analysis.sql` to calculate `trips_weather_adjusted` using temperature and precipitation effects (formula: `trips_total * (avg_weather_factor / actual_weather_factor)`)
+  - [x] Sub-task: Update `demand_vs_baseline_pct` to use weather-adjusted trips for comparison
+  - [x] Sub-task: Run `cd dbt && uv run dbt build --select mart_holiday_analysis`
+  - [x] Sub-task: Validate: Query mart to compare raw vs. adjusted trips for a known holiday (e.g., Memorial Day) - adjusted should differ based on weather
 
 **Validation:** Weather-adjusted metrics are calculated correctly. Both raw and adjusted trip counts are available in the mart.
 
@@ -288,9 +288,9 @@ Update documentation and add final touches to prepare for deployment.
 ## Progress Tracking
 
 **Total Slices:** 13
-**Completed:** 3
+**Completed:** 4
 **In Progress:** 0
-**Remaining:** 10
+**Remaining:** 9
 
 ---
 

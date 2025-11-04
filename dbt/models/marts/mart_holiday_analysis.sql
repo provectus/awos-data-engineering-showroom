@@ -6,7 +6,7 @@
 
 -- Holiday Impact Analysis Mart
 -- Joins daily demand metrics with holiday data to enable comparison of holiday vs. non-holiday demand
--- Weather normalization will be added in Slice 4 (currently trips_weather_adjusted = trips_total)
+-- Includes weather normalization to adjust demand as if all days had average weather conditions
 
 with demand_weather as (
     select
@@ -14,8 +14,18 @@ with demand_weather as (
         trips_total,
         day_type,
         tmax,
+        temp_avg,
         precip
     from {{ ref('mart_weather_effect') }}
+),
+
+-- Calculate overall average weather conditions (baseline for normalization)
+weather_baseline as (
+    select
+        avg(temp_avg) as baseline_temp,
+        avg(precip) as baseline_precip
+    from demand_weather
+    where temp_avg is not null
 ),
 
 holidays as (
@@ -67,20 +77,53 @@ joined as (
         -- Baseline comparison (cross join to get the single baseline value)
         bc.baseline_daily_trips,
 
-        -- Demand vs baseline percentage
+        -- Weather normalization: Calculate weather impact factor and adjust trips
+        -- Goal: Estimate what trips would have been under baseline weather conditions
+        -- Temperature factor: Linear relationship with 1.5% change per degree C from baseline
+        -- Precipitation factor: Logarithmic decay - rain has diminishing marginal impact
         case
+            when dw.temp_avg is null or dw.precip is null then
+                -- If weather data missing, return raw trips (no adjustment)
+                dw.trips_total
+            else
+                -- Calculate normalized trips:
+                -- trips_normalized = trips_actual * (baseline_impact / actual_impact)
+                -- where impact = temp_factor * precip_factor
+                dw.trips_total * (
+                    -- Baseline weather impact (what we're normalizing TO)
+                    (1.0 / (1.0 + 0.03 * wb.baseline_precip))  -- Baseline precip impact
+                    /
+                    -- Actual weather impact (what we're normalizing FROM)
+                    greatest(
+                        (1.0 / (1.0 + 0.03 * dw.precip)),  -- Actual precip impact
+                        0.25  -- Cap minimum impact at 25% to avoid extreme adjustments
+                    )
+                ) * (
+                    -- Temperature adjustment: 1.5% per degree from optimal (20.3°C)
+                    1.0 + (dw.temp_avg - wb.baseline_temp) * 0.015
+                )
+        end as trips_weather_adjusted,
+
+        -- Demand vs baseline percentage (using weather-adjusted trips)
+        case
+            when bc.baseline_daily_trips > 0 and dw.temp_avg is not null and dw.precip is not null then
+                -- Calculate using weather-adjusted trips
+                (((dw.trips_total * (
+                    (1.0 / (1.0 + 0.03 * wb.baseline_precip)) /
+                    greatest((1.0 / (1.0 + 0.03 * dw.precip)), 0.25)
+                ) * (
+                    1.0 + (dw.temp_avg - wb.baseline_temp) * 0.015
+                )) - bc.baseline_daily_trips) / bc.baseline_daily_trips) * 100
             when bc.baseline_daily_trips > 0 then
+                -- Fallback to raw trips if weather data missing
                 ((dw.trips_total - bc.baseline_daily_trips) / bc.baseline_daily_trips) * 100
             else null
-        end as demand_vs_baseline_pct,
-
-        -- PLACEHOLDER: Weather-adjusted trips (Slice 4 will add actual normalization logic)
-        -- For now, this equals raw trips_total
-        dw.trips_total as trips_weather_adjusted
+        end as demand_vs_baseline_pct
 
     from demand_weather dw
     left join holidays h on dw.ride_date = h.date
     cross join baseline_calc bc  -- Single row, so cross join is safe
+    cross join weather_baseline wb  -- Single row with baseline weather values
 )
 
 select * from joined
