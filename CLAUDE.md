@@ -4,435 +4,385 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a weather-aware bike demand platform demonstrating modern data stack with incremental data source value. The project showcases how adding new data sources (weather) incrementally enhances insights from existing sources (bike trips).
+This is a data product for NYC Citi Bike demand analytics. The project ingests bike trip and weather data, validates quality, transforms into analytics-ready models, and visualizes insights through interactive dashboards.
 
-**Tech Stack**: dlt (ingestion), Great Expectations (validation), dbt (transformation), DuckDB (warehouse), Airflow (orchestration), Streamlit (visualization), Polars (analysis)
+## Tech Stack
+
+- **Data Ingestion**: dlt (Data Load Tool) - idempotent, incremental loading from APIs/files
+- **Data Warehouse**: DuckDB - embedded analytics database (no infrastructure needed)
+- **Data Validation**: Great Expectations - automated data quality checks at ingestion and transformation stages
+- **Data Transformation**: dbt (Data Build Tool) - SQL-based transformations with testing
+- **Orchestration**: Apache Airflow - workflow scheduling and dependency management
+- **Analytics**: Polars (dataframes), Jupyter (exploration)
+- **Visualization**: Streamlit + Plotly - interactive dashboards
+- **Package Management**: uv - fast Python dependency resolution
+- **Code Quality**: ruff - linting and formatting
 
 ## Essential Commands
 
-### Development Setup
+### Environment Setup
 ```bash
-# Install all dependencies (uv creates virtual environment automatically)
+# Install dependencies (uv automatically creates venv)
 uv sync
 
-# Code quality checks
+# Activate virtual environment (if needed manually)
+source .venv/bin/activate
+```
+
+### Development Commands
+```bash
+# Run linting
 uv run ruff check .
-uv run ruff format .
+
+# Auto-fix linting issues
 uv run ruff check . --fix
 
-# Run tests
+# Format code
+uv run ruff format .
+
+# Run all tests
 uv run pytest tests/ -v
+
+# Run specific test file
 uv run pytest tests/test_bike_pipeline.py -v
+
+# Run tests with coverage
 uv run pytest tests/ --cov=dlt_pipeline --cov-report=html
 ```
 
-### Data Pipeline Execution
+### Data Pipeline Commands
 
-**Manual execution (recommended for first run):**
+**Data Ingestion (dlt)**:
 ```bash
-# 1. Ingest bike data
+# Ingest bike trip data (downloads May-June 2024 CSVs from S3)
 uv run python dlt_pipeline/bike.py
 
-# 2. Validate bike data
+# Ingest weather data (fetches from Open-Meteo API)
+uv run python dlt_pipeline/weather.py
+```
+
+**Data Quality Validation (Great Expectations)**:
+```bash
+# Validate bike trip data
 uv run python data_quality/validate_bike_data.py
 
-# 3. Run dbt transformations
-cd dbt
-uv run dbt deps    # Install dbt packages (first time)
-uv run dbt build   # Run models and tests
-uv run dbt test    # Run only tests
-uv run dbt run     # Run only models
-cd ..
-
-# 4. View dashboard
-uv run streamlit run streamlit_app/Home.py
-
-# 5. Add weather data (Part 2)
-uv run python dlt_pipeline/weather.py
+# Validate weather data
 uv run python data_quality/validate_weather_data.py
-cd dbt && uv run dbt build && cd ..
 
-# Validate all data sources at once
+# Validate all data sources
 uv run python data_quality/validate_all.py
-```
 
-**Airflow orchestration:**
-```bash
-# Initialize (first time only)
-export AIRFLOW_HOME=./airflow
-
-# Start services (use separate terminals)
-uv run airflow standalone
-
-# Trigger DAG
-uv run airflow dags trigger bike_weather_pipeline
-```
-
-### dbt-Specific Commands
-```bash
-cd dbt
-
-# Documentation
-uv run dbt docs generate
-uv run dbt docs serve
-
-# Run specific model
-uv run dbt run --select stg_bike_trips
-uv run dbt run --select marts.mart_weather_effect
-
-# Run model and downstream dependencies
-uv run dbt run --select stg_bike_trips+
-
-# Test specific model
-uv run dbt test --select stg_bike_trips
-```
-
-### Data Quality Validation
-```bash
-# View validation results in browser
+# View validation reports in browser
 open data_quality/gx/uncommitted/data_docs/local_site/index.html
 ```
 
-### Jupyter Analysis
+**Data Transformation (dbt)**:
 ```bash
-uv run jupyter notebook  # or: uv run jupyter lab
-# Open notebooks/polars_eda.ipynb
+cd dbt
+
+# Install dbt packages (dbt_utils, etc.)
+uv run dbt deps
+
+# Run all models and tests
+uv run dbt build
+
+# Run specific model
+uv run dbt run --select stg_bike_trips
+
+# Test data quality
+uv run dbt test
+
+# Generate and serve documentation
+uv run dbt docs generate
+uv run dbt docs serve  # Opens lineage graph at localhost:8080
+
+cd ..
 ```
 
-## Architecture Overview
-
-### Data Flow
-1. **Ingestion**: dlt pipelines extract data from APIs → Load into DuckDB raw schemas
-   - `bike_ingestion.duckdb`: Raw bike trips (dlt manages)
-   - `weather_ingestion.duckdb`: Raw weather data (dlt manages)
-
-2. **Validation**: Great Expectations validates raw data quality
-   - Expectation suites in `data_quality/gx/expectations/`
-   - Results in `data_quality/gx/uncommitted/data_docs/`
-
-3. **Transformation**: dbt reads from attached DuckDB files, transforms data
-   - **Staging layer** (`dbt/models/staging/`): Cleans and normalizes raw data
-   - **Core layer** (`dbt/models/core/`): Business logic (dimensions, facts)
-   - **Marts layer** (`dbt/models/marts/`): Analytics-ready aggregations
-
-4. **Storage**: Transformed data lands in `warehouse.duckdb`
-
-5. **Consumption**: Streamlit dashboards query warehouse.duckdb
-
-### Key Architectural Patterns
-
-**DuckDB Multi-Database Pattern**:
-- dbt uses `attach` in `profiles.yml` to read from multiple DuckDB files
-- Raw data stays in dlt-managed databases (read-only)
-- Transformed data goes to warehouse.duckdb
-- Sources reference attached databases: `bike_ingestion.raw_bike.bike_trips`
-
-**dlt Pipeline Pattern**:
-- Resources use `@dlt.resource` decorator
-- `write_disposition="merge"` for idempotent loads
-- Primary keys prevent duplicates
-- Pipelines create separate DuckDB files
-
-**dbt Transformation Pattern**:
-- Sources defined in `staging/sources.yml` reference attached databases
-- Three-layer structure: staging → core → marts
-- Materializations: staging=views, core/marts=tables
-- Schemas configured in `dbt_project.yml`
-
-**Data Quality Gates**:
-- Validate after ingestion (raw data quality)
-- Validate after transformation (business logic quality)
-- dbt schema tests for referential integrity
-- Great Expectations for statistical validation
-
-## Important Implementation Details
-
-### When Modifying dlt Pipelines
-- Resources must have `primary_key` for merge operations
-- Date formats should be normalized in the parse functions
-- Add `_dlt_load_timestamp` for load tracking
-- Handle API errors gracefully (continue on failure for individual months)
-- Use Polars for efficient CSV parsing (bike pipeline)
-- Batch yields for memory efficiency
-
-### When Modifying dbt Models
-- Run `dbt deps` after changing `packages.yml`
-- Always add schema tests in `schema.yml` files
-- Use `ref()` for model dependencies, `source()` for raw tables
-- Materialized tables need explicit dependencies in DAG
-- Variables in `dbt_project.yml` configure date ranges
-
-### When Adding New Data Sources
-1. Create new dlt pipeline in `dlt_pipeline/` (follow bike.py/weather.py pattern)
-2. Add Great Expectations suite in `data_quality/gx/expectations/`
-3. Create validation script in `data_quality/`
-4. Add source definition in `dbt/models/staging/sources.yml`
-5. Create staging model in `dbt/models/staging/`
-6. Update Airflow DAG to include new ingestion task
-7. Test end-to-end before committing
-
-### Database Connections
-- **dlt**: Automatically creates `{pipeline_name}.duckdb` in `duckdb/` directory
-- **dbt**: Uses `profiles.yml` to attach multiple DuckDB files
-- **Streamlit**: Connects directly to `warehouse.duckdb` (read-only)
-- **Jupyter**: Can connect to any DuckDB file
-
-### Common Pitfalls
-- **DuckDB lock errors**: Only one write connection allowed; ensure processes don't overlap
-- **Missing dbt packages**: Run `dbt deps` in dbt directory first
-- **Source not found**: Verify attached database paths in `profiles.yml` are correct
-- **Empty dashboard**: Must run dlt → dbt before viewing Streamlit
-- **Validation failures**: Check `data_quality/gx/uncommitted/data_docs/` for details
-
-## Testing Strategy
-
-- **Unit tests** (`tests/`): Mock HTTP calls, test parsing logic
-- **dbt tests**: Schema tests in YAML, data tests in SQL
-- **Great Expectations**: Statistical validation, business rule checks
-- **Integration**: Run full pipeline end-to-end in Airflow
-
-## Project Variables
-
-Configured in `dbt/dbt_project.yml`:
-- `bike_start_month`: "2024-05"
-- `bike_end_month`: "2024-06"
-- `weather_start_date`: "2024-05-01"
-- `weather_end_date`: "2024-06-30"
-
-Update these when changing date ranges (must match across dlt and dbt).
-
-## Cross-Cutting Standards
-
-### Logging Format
-
-All Python modules MUST use this standardized logging configuration for consistency across the project:
-
-```python
-import logging
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-
-logger = logging.getLogger(__name__)
-```
-
-**Best Practices:**
-- Use module-level logger: `logger = logging.getLogger(__name__)` to identify log source
-- Default to INFO level; use DEBUG for detailed troubleshooting
-- Always include timestamps for debugging time-dependent issues
-- For structured logging in production, consider `structlog` (already in dependencies)
-
-**Log Levels:**
-- `DEBUG`: Detailed diagnostic information (data processing steps, API payloads)
-- `INFO`: General informational messages (pipeline start/end, record counts)
-- `WARNING`: Unexpected but recoverable conditions (missing optional fields)
-- `ERROR`: Errors that cause operation failure but allow continuation
-- `CRITICAL`: Severe errors requiring immediate attention
-
-### Error Handling Principles
-
-**Core Principles:**
-1. **Use specific exceptions**: Prefer `requests.exceptions.RequestException` over generic `Exception`
-2. **Log before raising**: Always log error context before raising exceptions
-3. **Graceful degradation**: For batch operations, continue processing remaining items if one fails
-4. **Timeout configuration**: Set reasonable timeouts for HTTP requests (default: 300s)
-5. **Context preservation**: Include relevant identifiers (month, file, record ID) in error messages
-
-**Example Pattern from `dlt_pipeline/bike.py`:**
-
-```python
-for month_str in months:
-    logger.info("Processing %s", month_str)
-    try:
-        # Download and process data
-        zip_file = download_bike_data(month_str, base_url)
-        csv_files = unzip_bike_data(zip_file)
-        yield from parse_bike_data(csv_files, month_str)
-
-    except requests.exceptions.RequestException as e:
-        # Log with context and continue
-        logger.error("Failed to download data for %s: %s", month_str, e)
-        continue  # Continue with next month
-
-    except Exception as e:
-        # Log unexpected errors with full traceback
-        logger.exception("Unexpected error processing %s: %s", month_str, e)
-        continue
-```
-
-**When to Re-raise vs. Continue:**
-- **Continue**: Batch operations where one failure shouldn't stop the entire pipeline (e.g., monthly data loads)
-- **Re-raise**: Critical operations where failure makes subsequent steps impossible (e.g., database connection)
-
-### Code Style
-
-Using Ruff with target Python 3.11+:
-- **Line length**: 100 characters
-- **String quotes**: Double quotes
-- **Import sorting**: Enabled (isort)
-- **Type hints**: Encouraged but not required
-- **Docstrings**: Google style
-- **Per-file ignores**:
-  - `airflow/dags/*.py`: E402 (imports after sys.path modifications), I001 (import sorting)
-  - `notebooks/*.py`: T201 (print statements allowed), I001 (import sorting)
-  - `test_*.py`: T201 (print statements allowed)
-
-**Ruff Configuration (from `pyproject.toml`):**
-```toml
-[tool.ruff]
-line-length = 100
-target-version = "py311"
-
-[tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP", "B", "A", "C4", "T20", "SIM", "ARG"]
-ignore = ["E501"]
-```
-
-**Run code quality checks:**
+**Orchestration (Airflow)**:
 ```bash
-uv run ruff check .        # Check for violations
-uv run ruff check . --fix  # Auto-fix violations
-uv run ruff format .       # Format code
+# Set Airflow home directory
+export AIRFLOW_HOME=./airflow
+
+# Start Airflow standalone version
+uv run airflow standalone
+
+# Trigger DAG manually
+uv run airflow dags trigger bike_weather_pipeline
+
+# Check DAG status
+uv run airflow dags list
 ```
 
-## Module Execution Order
-
-### Sequential Dependency Chain
-
-The data pipeline must execute in this order due to data dependencies:
-
-```
-1. dlt_pipeline   → Ingest raw data to DuckDB
-2. dbt            → Transform raw data in warehouse
-3. data_quality   → Validate transformed data
-4. streamlit_app  → Visualize warehouse data (can run in parallel)
-5. notebooks      → Analyze warehouse data (can run in parallel)
+**Dashboard (Streamlit)**:
+```bash
+# Launch interactive dashboard
+uv run streamlit run streamlit_app/Home.py
+# Opens at http://localhost:8501
 ```
 
-### Airflow Orchestration DAG
+**Jupyter Notebooks**:
+```bash
+# Start Jupyter for exploratory analysis
+uv run jupyter notebook
 
-The Airflow DAG (`airflow/dags/bike_weather_dag.py`) enforces these dependencies:
-
-```
-┌─────────────────┐     ┌──────────────────┐
-│ ingest_bike_data │────▶│   dbt_deps       │
-└─────────────────┘     │  (install pkgs)  │
-                        └──────────────────┘
-┌───────────────────┐            │
-│ingest_weather_data│────────────┤
-└───────────────────┘            ▼
-                        ┌──────────────────┐
-                        │    dbt_build     │
-                        │ (models + tests) │
-                        └──────────────────┘
-                                 │
-                                 ▼
-                        ┌──────────────────┐
-                        │ dbt_docs_generate│
-                        └──────────────────┘
+# Or use JupyterLab
+uv run jupyter lab
 ```
 
-**Key Points:**
-- Bike and weather ingestion run in parallel (no dependencies)
-- dbt waits for both ingestion tasks to complete
-- Data quality validation can be added after dbt_build
-- Streamlit/notebooks are not orchestrated (on-demand consumption)
+## Architecture & Data Flow
 
-## Module Communication Pattern
-
-Modules communicate exclusively via **DuckDB file paths**. No direct Python imports between data modules.
-
-| Producer Module | Output File | Consumer Module(s) | Purpose |
-|----------------|-------------|---------------------|---------|
-| `dlt_pipeline` | `duckdb/bike_ingestion.duckdb` | `dbt`, `data_quality` | Raw bike trip data |
-| `dlt_pipeline` | `duckdb/weather_ingestion.duckdb` | `dbt`, `data_quality` | Raw weather observations |
-| `dbt` | `duckdb/warehouse.duckdb` | `data_quality`, `streamlit_app`, `notebooks` | Transformed analytics tables |
-
-### Configuration File References
-
-**dlt Configuration:**
-- Pipeline name determines output file: `dlt.pipeline(pipeline_name="bike_ingestion")` → `duckdb/bike_ingestion.duckdb`
-- Location: Hardcoded in `dlt_pipeline/bike.py` and `dlt_pipeline/weather.py`
-
-**dbt Configuration (`dbt/profiles.yml`):**
-```yaml
-bike_weather:
-  target: dev
-  outputs:
-    dev:
-      type: duckdb
-      path: ../duckdb/warehouse.duckdb  # Output file
-      attach:
-        - path: ../duckdb/bike_ingestion.duckdb      # Input file
-          alias: bike_ingestion
-        - path: ../duckdb/weather_ingestion.duckdb   # Input file
-          alias: weather_ingestion
-```
-
-**Consumer Configuration:**
-- Streamlit (`streamlit_app/Home.py`): `duckdb.connect("duckdb/warehouse.duckdb", read_only=True)`
-- Notebooks: Direct DuckDB connection to any `.duckdb` file
-- Great Expectations (`data_quality/gx/`): Configured in checkpoints to reference specific DuckDB files
-
-## DuckDB Locking Constraints
-
-**CRITICAL: DuckDB allows only ONE write connection per database file at a time.**
-
-### Implications
-
-- **Development**: Run modules sequentially using Makefiles or manual execution
-- **Production**: Airflow DAG enforces task dependencies to prevent concurrent writes
-- **Consumers**: Always use `read_only=True` for Streamlit/notebooks to prevent accidental locks
-
-### Symptoms of Lock Violations
+### Pipeline Stages
 
 ```
-sqlite3.OperationalError: database is locked
-duckdb.IOException: Could not set lock on file
+Data Sources → Ingestion → Validation → Transformation → Analytics
+    ↓             ↓            ↓             ↓             ↓
+NYC Citi Bike   dlt       Great Exp.      dbt        Streamlit
+Open-Meteo API            Checkpoints    Models      Dashboards
 ```
 
-### Resolution Strategies
+**Detailed Flow**:
+1. **Ingestion**: dlt pipelines fetch raw data → `bike_ingestion.duckdb`, `weather_ingestion.duckdb`
+2. **Validation**: Great Expectations runs quality checks (null checks, value ranges, referential integrity)
+3. **Transformation**: dbt reads raw DuckDB tables → stages → core models → marts → `warehouse.duckdb`
+4. **Consumption**: Streamlit/Jupyter query `warehouse.duckdb` marts for analytics
 
-1. **Check running processes**: `ps aux | grep python` and kill stale connections
-2. **Verify Airflow DAG**: Ensure task dependencies use `>>` operator correctly
-3. **Use read-only connections**: For Streamlit and notebooks, always specify `read_only=True`
-4. **Sequential execution**: In development, run one module at a time
+### Key Database Locations
+- `duckdb/bike_ingestion.duckdb` - Raw bike trip data from dlt
+- `duckdb/weather_ingestion.duckdb` - Raw weather data from dlt
+- `duckdb/warehouse.duckdb` - Transformed analytics tables (dbt output)
 
-**Example safe consumer connection:**
+### dbt Model Layers
+
+**Staging** (`models/staging/`):
+- `stg_bike_trips.sql` - Clean raw bike trips (parse timestamps, standardize types)
+- `stg_weather.sql` - Clean raw weather data (temperature conversions, date parsing)
+- **Purpose**: Type casting, basic cleaning, no business logic
+
+**Core** (`models/core/`):
+- `dim_stations.sql` - Station dimension (deduplicated station info)
+- `fct_trips_daily.sql` - Daily trip aggregations by station
+- **Purpose**: Conformed dimensions and fact tables
+
+**Marts** (`models/marts/`):
+- `mart_demand_daily.sql` - Daily demand metrics (trips, duration, user types)
+- `mart_weather_effect.sql` - Weather-enriched demand analysis
+- **Purpose**: Business-ready analytics tables for dashboards
+
+### DuckDB Query Patterns
+
+When working with DuckDB tables directly:
 ```python
 import duckdb
 
-# Safe: read-only connection
-conn = duckdb.connect("duckdb/warehouse.duckdb", read_only=True)
-
-# Unsafe: write connection (default)
-# conn = duckdb.connect("duckdb/warehouse.duckdb")  # Don't do this in consumers!
+# Read from warehouse
+conn = duckdb.connect('duckdb/warehouse.duckdb', read_only=True)
+df = conn.execute("SELECT * FROM marts.mart_demand_daily LIMIT 10").fetchdf()
+conn.close()
 ```
 
-## Module-Specific CLAUDE.md Files
+## Development Patterns
 
-Each module has its own CLAUDE.md with detailed implementation patterns and examples:
+### Adding a New Data Source
 
-- **`dlt_pipeline/CLAUDE.md`** - Data ingestion patterns (dlt resources, API handling, Polars parsing)
-- **`dbt/CLAUDE.md`** - SQL transformation patterns (staging/core/marts layers, testing, documentation)
-- **`data_quality/CLAUDE.md`** - Validation patterns (Great Expectations suites, checkpoints, reporting)
-- **`streamlit_app/CLAUDE.md`** - Dashboard patterns (multi-page apps, caching, visualization)
-- **`airflow/CLAUDE.md`** - Orchestration patterns (TaskFlow API, DAG structure, error handling)
-- **`notebooks/CLAUDE.md`** - Analysis patterns (Polars operations, statistical tests, visualization)
+Follow this sequence (see `.claude/agents/domain-experts/dlt-data-ingestion.md` for detailed guidance):
 
-**Subagent Workflow:**
-1. Read root `CLAUDE.md` for project overview and cross-cutting standards
-2. Identify target module based on task requirements
-3. Read module-specific `CLAUDE.md` for detailed patterns
-4. Review example implementations in the module
-5. Follow documented patterns for consistency
+1. **Create dlt pipeline** in `dlt_pipeline/`:
+   - Implement source function with `@dlt.source` decorator
+   - Define resources with `@dlt.resource` for each table
+   - Use `merge` write disposition for idempotency
+   - Add primary keys for deduplication
+   - Handle authentication via `.dlt/secrets.toml`
 
-**When to consult module CLAUDE.md:**
-- Adding new data sources → `dlt_pipeline/CLAUDE.md`
-- Creating new dbt models → `dbt/CLAUDE.md`
-- Adding validation checks → `data_quality/CLAUDE.md`
-- Building new dashboards → `streamlit_app/CLAUDE.md`
-- Modifying orchestration → `airflow/CLAUDE.md`
-- Performing analysis → `notebooks/CLAUDE.md`
+2. **Create Great Expectations suite** in `data_quality/`:
+   - Define expectation suite in `gx/expectations/`
+   - Create checkpoint in `gx/checkpoints/`
+   - Write validation script (e.g., `validate_<source>_data.py`)
+   - Key expectations: nullability, uniqueness, value ranges, referential integrity
+
+3. **Create dbt models**:
+   - Add staging model in `dbt/models/staging/stg_<source>.sql`
+   - Optionally add core/mart models if creating new analytics
+   - Join to existing marts to enrich analysis (e.g., `mart_weather_effect.sql`)
+   - Add schema tests in `models/staging/schema.yml`
+
+4. **Update Airflow DAG** in `airflow/dags/bike_weather_dag.py`:
+   - Add ingestion task (PythonOperator or BashOperator)
+   - Add validation task
+   - Wire dependencies: `ingest → validate → dbt_build`
+
+5. **Add dashboard visualizations** in `streamlit_app/pages/`:
+   - Create new page: `pages/<Source>_Analysis.py`
+   - Query mart tables from `warehouse.duckdb`
+   - Use Plotly for interactive charts
+
+### Testing Strategy
+
+**Unit Tests** (`tests/`):
+- Mock external API calls using `pytest-mock`
+- Test data parsing and transformation logic
+- Test error handling for network failures
+- Example: `tests/test_bike_pipeline.py` mocks HTTP responses
+
+**Data Quality Tests**:
+- Great Expectations validates ingested data (input quality)
+- dbt tests validate transformed data (output quality)
+- Run after each pipeline stage to fail fast
+
+**Integration Tests**:
+- Run full pipeline end-to-end in test environment
+- Validate row counts, schema consistency
+- Check dashboard can load data without errors
+
+### Error Handling
+
+**dlt Pipelines**:
+- Use try-except for HTTP requests with retry logic
+- Log detailed errors with context (URL, params, response)
+- Return empty iterators for optional sources (don't fail pipeline)
+- Check `pipeline.run()` result for load errors
+
+**Great Expectations**:
+- Validation failures stop pipeline (fail fast)
+- Review detailed reports in Data Docs for debugging
+- Add expectations incrementally (start permissive, tighten over time)
+
+**dbt**:
+- Schema tests fail on data quality issues (nulls, uniqueness violations)
+- Use `dbt test --select <model>` to test incrementally
+- Set severity: `warn` vs `error` based on criticality
+
+### Performance Optimization
+
+**dlt**:
+- Use `merge` write disposition with primary keys (avoids full table scans)
+- Batch API requests (e.g., fetch multiple months in parallel)
+- Cache downloaded files locally (see `bike.py` download logic)
+
+**dbt**:
+- Materialize staging as `view` (no storage cost)
+- Materialize core/marts as `table` (query performance)
+- Use `--threads N` for parallel model execution
+- Add indexes on commonly filtered columns in DuckDB
+
+**DuckDB**:
+- DuckDB is optimized for analytics (columnar storage)
+- Automatically parallelizes queries across cores
+- Use `EXPLAIN` to analyze query plans
+- Consider Parquet export for very large datasets
+
+## Project-Specific Conventions
+
+### File Organization
+- `dlt_pipeline/` - All data ingestion code (one file per source)
+- `data_quality/` - Great Expectations config and validation scripts
+- `dbt/models/` - All dbt transformations (staging → core → marts)
+- `airflow/dags/` - Orchestration workflows
+- `streamlit_app/` - Dashboard code (Home.py + pages/)
+- `tests/` - Unit and integration tests
+
+### Naming Conventions
+- **dlt tables**: `<source_name>_raw` (e.g., `bike_trips`, `weather_data`)
+- **dbt staging**: `stg_<source>` (e.g., `stg_bike_trips`)
+- **dbt core**: `dim_<entity>` (dimensions), `fct_<event>` (facts)
+- **dbt marts**: `mart_<business_concept>` (e.g., `mart_demand_daily`)
+- **Python modules**: snake_case
+- **dbt models**: snake_case.sql
+
+### Configuration Files
+- `pyproject.toml` - Python dependencies, project metadata, ruff config
+- `uv.lock` - Locked dependency versions (committed to git)
+- `dbt/dbt_project.yml` - dbt configuration (materialization, schemas)
+- `dbt/profiles.yml` - Database connections (DuckDB paths)
+- `dlt_pipeline/.dlt/config.toml` - dlt non-sensitive config
+- `dlt_pipeline/.dlt/secrets.toml` - dlt credentials (git-ignored)
+- `ruff.toml` - Additional linting rules
+
+### Code Style
+- **Docstrings**: All public functions have Google-style docstrings
+- **Type hints**: Use typing annotations (Python 3.11+)
+- **Line length**: 100 characters (ruff enforced)
+- **Imports**: Absolute imports, sorted by ruff (isort rules)
+- **SQL**: Lowercase keywords, 2-space indentation in dbt models
+
+## Troubleshooting
+
+### Common Issues
+
+**"No module named 'dlt'" or similar**:
+- Always prefix commands with `uv run` to use the project virtualenv
+- Example: `uv run python dlt_pipeline/bike.py` (not `python dlt_pipeline/bike.py`)
+
+**DuckDB database locked**:
+- Only one process can write to DuckDB at a time
+- Close all connections before running pipeline
+- Check for open Jupyter kernels or Streamlit sessions
+
+**dbt cannot find profiles.yml**:
+- Run dbt commands from `dbt/` directory: `cd dbt && uv run dbt build`
+- Or specify profiles dir: `uv run dbt build --profiles-dir dbt`
+
+**Streamlit shows "No data available"**:
+- Ensure pipeline has been run: `uv run python dlt_pipeline/bike.py && cd dbt && uv run dbt build`
+- Check that `duckdb/warehouse.duckdb` exists and contains mart tables
+
+**Airflow DAG not appearing in UI**:
+- Check for syntax errors: `uv run python airflow/dags/bike_weather_dag.py`
+- Refresh Airflow UI (can take 30-60 seconds to detect new DAGs)
+- Restart scheduler if needed
+
+**Great Expectations validation fails**:
+- Review detailed report in `data_quality/gx/uncommitted/data_docs/`
+- Check which specific expectation failed
+- Adjust expectations if source data schema changed
+- Fix upstream data quality issues in dlt pipeline if needed
+
+### Data Issues
+
+**Duplicate records**:
+- Ensure dlt uses `merge` write disposition with correct primary key
+- Check dbt models use `DISTINCT` or `GROUP BY` where appropriate
+
+**Missing weather data for some dates**:
+- Weather API may have gaps - add null handling in dbt
+- Use `LEFT JOIN` instead of `INNER JOIN` to preserve bike trips
+
+**Schema evolution errors**:
+- dlt auto-evolves schema by default (adds new columns)
+- Check dlt schema contracts if you need strict validation
+- Update dbt models to handle new columns
+
+## Domain Expert Agents
+
+This repository includes specialized Claude Code agents for different data platform tasks. These are automatically available when using Claude Code:
+
+- **dlt-data-ingestion**: Design and implement data ingestion pipelines
+- **eda-duckdb-analyst**: Perform exploratory data analysis on DuckDB tables
+- **dbt-data-modeler**: Create and refactor dbt data transformation models
+- **data-quality-engineer**: Build Great Expectations validation suites
+- **streamlit-data-visualizer**: Create interactive Streamlit dashboards
+- **data-orchestration-pipeline**: Set up Airflow DAGs and scheduling
+
+See `.claude/agents/domain-experts/` for detailed agent prompts and capabilities.
+
+## Product Context
+
+**Current State**: MVP delivering NYC bike demand analytics with weather enrichment
+
+**Immediate Roadmap** (see `context/product/roadmap.md`):
+- **Phase 1 (Next)**: Holiday impact analysis using Nager.Date API
+- **Phase 2**: Predictive demand forecasting with ML
+- **Phase 3**: Route optimization for rebalancing operations
+- **Phase 4**: Multi-city expansion
+
+**Key Users**:
+- Bike-share operations managers (primary) - daily rebalancing decisions
+- Urban transportation planners - infrastructure planning
+- Business analysts - revenue and utilization optimization
+
+**Success Metrics**:
+- 40% reduction in empty/full station incidents
+- 30% reduction in rebalancing operational costs
+- >85% forecast accuracy for demand predictions
+
+For detailed product requirements and user stories, see `context/product/product-definition.md`.

@@ -1,205 +1,506 @@
-# Product Definition: AI-Native Data Platform
+# Product Definition: NYC Citi Bike Demand Analytics Platform
 
-- **Version:** 1.0
-- **Status:** Proposed
+## 1. Product Vision
+
+### What is this product?
+A data analytics platform that provides actionable insights into NYC Citi Bike demand patterns by analyzing trip data and weather conditions. The platform enables bike-share operators and urban planners to optimize fleet distribution, predict demand, and understand environmental factors affecting ridership.
+
+### What problem does it solve?
+**Primary Problem**: Bike-share operators lack real-time visibility into demand patterns and the factors driving ridership fluctuations, leading to inefficient fleet distribution and missed revenue opportunities.
+
+**Specific Challenges Addressed**:
+- **Demand Unpredictability**: Unable to forecast peak demand periods or understand demand drivers
+- **Poor Fleet Distribution**: Bikes concentrated in wrong locations due to lack of demand intelligence
+- **Weather Impact Blindness**: No quantified understanding of how weather affects ridership
+- **Operational Inefficiency**: Manual, reactive rebalancing instead of proactive, data-driven operations
+- **Limited Insights**: Raw trip data doesn't translate into actionable operational decisions
+
+### Who is it for?
+**Primary Personas**:
+
+1. **Bike-Share Operations Managers** (Primary)
+   - Need: Real-time demand visibility and rebalancing intelligence
+   - Pain: Constant user complaints about empty/full stations
+   - Goal: Optimize fleet distribution to maximize utilization and customer satisfaction
+
+2. **Urban Transportation Planners** (Secondary)
+   - Need: Understanding bike-share usage patterns for infrastructure planning
+   - Pain: Limited data on when/where bike infrastructure is needed most
+   - Goal: Make data-driven decisions on bike lane expansion and station placement
+
+3. **Business Analysts** (Secondary)
+   - Need: Revenue and utilization metrics to inform pricing and membership strategies
+   - Pain: Cannot identify growth opportunities or underperforming stations
+   - Goal: Increase membership revenue and overall ridership
+
+4. **Fleet Rebalancing Teams** (Tertiary)
+   - Need: Predictive intelligence on where bikes will be needed
+   - Pain: Reactive rebalancing wastes time and fuel
+   - Goal: Proactive repositioning based on demand forecasts
+
+### Why does this matter?
+**Business Value**:
+- **Increased Revenue**: Better bike availability drives 15-20% more trip completions
+- **Operational Cost Reduction**: Efficient rebalancing reduces fuel and labor costs by 30%
+- **Customer Satisfaction**: Fewer empty/full station complaints improve Net Promoter Score
+- **Data-Driven Expansion**: Identify high-demand areas for new station placement
+
+**Strategic Importance**:
+- **Competitive Advantage**: Data-driven operations differentiate from competitors
+- **Sustainable Urban Mobility**: Optimized bike-share increases adoption, reducing car usage
+- **Revenue Growth**: Understanding demand drivers enables dynamic pricing and promotions
+- **Operational Excellence**: Transition from reactive to predictive operations
+
+## 2. Success Metrics
+
+### Operational Impact Metrics
+- **Fleet Utilization**: Increase overall bike utilization by 15-20%
+- **Station Balance**: Reduce empty/full station incidents by 40%
+- **Rebalancing Efficiency**: Decrease rebalancing truck miles by 30%
+- **Customer Satisfaction**: Improve "bike availability" NPS score by 25 points
+- **Demand Forecast Accuracy**: Achieve >85% accuracy for next-day demand predictions
+
+### Business Metrics
+- **Revenue Growth**:
+  - 10-15% increase in completed trips through better availability
+  - 5% membership growth from improved service quality
+  - Reduced lost revenue from unavailable bikes at peak times
+
+- **Cost Reduction**:
+  - 30% reduction in rebalancing operational costs
+  - 20% reduction in maintenance costs through better wear distribution
+  - Reduced customer service costs from availability complaints
+
+### User Adoption Metrics
+- **Dashboard Usage**: Operations teams access dashboards daily (5+ sessions/day)
+- **Insight Actuation**: 80%+ of demand predictions used in rebalancing decisions
+- **Time-to-Insight**: Users find actionable insights within 2 minutes of dashboard access
+- **User Satisfaction**: 4.5/5 average satisfaction rating from operations teams
+
+### Data Quality Metrics
+- **Data Freshness**: Trip data updated within 24 hours of ride completion
+- **Data Completeness**: >99% of trips captured with all required attributes
+- **Validation Pass Rate**: >95% of data quality checks pass automatically
+- **Accuracy**: Weather-demand correlations match known patterns (r² > 0.7 for temperature)
+
+## 3. Core Features & Requirements
+
+### Must-Have Features (MVP)
+
+#### 1. Daily Demand Analytics Dashboard
+**Description**: Visualize trip patterns across time, stations, and user types
+**User Story**: As an operations manager, I need to see daily demand trends by station and hour, so that I can plan rebalancing routes for the next day.
+
+**Acceptance Criteria**:
+- ✅ Daily trip volume trends with 7-day and 30-day moving averages
+- ✅ Top 20 stations by trip volume with pickup/dropoff breakdown
+- ✅ Member vs. casual ridership comparison
+- ✅ Hourly demand heatmap showing peak periods
+- ✅ Station-level utilization metrics (trips per bike per day)
+- ✅ Dashboard loads in <3 seconds
+
+**Key Insights Delivered**:
+- Which stations need more/fewer bikes tomorrow
+- Peak demand hours for rebalancing planning
+- Member behavior patterns for capacity planning
+
+#### 2. Weather Impact Analysis
+**Description**: Quantify how weather conditions affect ridership
+**User Story**: As a business analyst, I need to understand how weather impacts demand, so that I can adjust pricing and staffing during different conditions.
+
+**Acceptance Criteria**:
+- ✅ Temperature vs. demand correlation chart (scatter plot with trendline)
+- ✅ Rainy day vs. dry day demand comparison (20-40% drop expected)
+- ✅ "What-if" temperature slider: predict demand at different temperatures
+- ✅ Weather condition filters (clear, rainy, extreme temperatures)
+- ✅ Statistical metrics: correlation coefficient (r²), average demand by weather band
+
+**Key Insights Delivered**:
+- Quantified demand drop during rain (e.g., "30% fewer trips when raining")
+- Temperature sweet spot for peak ridership (65-75°F typically)
+- Demand forecasts based on weather predictions
+
+#### 3. Station Performance Rankings
+**Description**: Identify high/low performing stations for operational decisions
+**User Story**: As an urban planner, I need to see which stations are underutilized or overcrowded, so that I can recommend new station placements or capacity changes.
+
+**Acceptance Criteria**:
+- ✅ Station ranking by total trips (top 50 and bottom 50)
+- ✅ Net flow analysis (more pickups or dropoffs)
+- ✅ Imbalance score: stations with chronic empty/full problems
+- ✅ Geographic map view of station performance
+- ✅ Time-of-day breakdown for each station
+
+**Key Insights Delivered**:
+- Which stations need capacity expansion
+- Stations with chronic rebalancing needs (net sources/sinks)
+- Potential locations for new stations based on demand gaps
+
+#### 4. Automated Daily Data Pipeline
+**Description**: Reliable, scheduled ingestion and transformation of trip and weather data
+**User Story**: As an operations manager, I need fresh data every morning without manual work, so that my team has yesterday's insights at daily standup.
+
+**Acceptance Criteria**:
+- ✅ Daily automated run at 6 AM (before business hours)
+- ✅ Incremental loading: only fetch new trips since last run
+- ✅ Data quality validation gates (fails pipeline if critical issues detected)
+- ✅ Email/Slack alert on pipeline success or failure
+- ✅ Manual trigger capability for backfills
+
+**Technical Requirements**:
+- Scheduled Airflow DAG execution
+- Idempotent ingestion (safe to re-run)
+- Validation checkpoints using Great Expectations
+- Notification integration
+
+#### 5. Data Quality Monitoring
+**Description**: Automated validation ensuring data trustworthiness
+**User Story**: As a business analyst, I need confidence that the numbers in dashboards are accurate, so that I can make decisions without second-guessing the data.
+
+**Acceptance Criteria**:
+- ✅ Trip data validation: no nulls in trip_id, start/end times, station IDs
+- ✅ Weather data validation: temperature ranges (-20°F to 110°F), tmax >= tmin
+- ✅ Referential integrity: all station IDs in trips exist in station dimension
+- ✅ Freshness checks: data not older than 48 hours
+- ✅ Validation reports accessible to stakeholders
+
+**Key Validations**:
+- No duplicate trip IDs
+- Start time always before end time
+- Reasonable trip durations (1 min to 24 hours)
+- Weather data completeness (no missing days)
+
+### Should-Have Features (Post-MVP)
+
+#### 6. Predictive Demand Forecasting
+**Description**: Machine learning models to forecast next-day demand by station
+**User Story**: As a rebalancing coordinator, I need tomorrow's demand predictions by station, so that I can pre-position bikes overnight.
+
+**Key Capabilities**:
+- Next-day demand forecast by station and hour
+- Weather-adjusted predictions (use forecast temperature/precipitation)
+- Confidence intervals for predictions (±10% typically)
+- Model accuracy tracking over time
+
+**Business Impact**:
+- Proactive vs. reactive rebalancing
+- 20-30% reduction in rebalancing trips
+- Improved customer satisfaction from better availability
+
+#### 7. Rebalancing Route Optimization
+**Description**: Suggest optimal truck routes for bike redistribution
+**User Story**: As a rebalancing driver, I need an optimized route that addresses all high-priority imbalances, so that I minimize driving time.
+
+**Key Capabilities**:
+- Identify stations needing pickups/dropoffs based on predicted demand
+- Generate multi-stop routes optimized for time/distance
+- Priority scoring (urgent vs. routine rebalancing)
+- Real-time updates as demand changes
+
+**Business Impact**:
+- 30-40% reduction in rebalancing miles driven
+- Faster response to imbalances
+- Fuel cost savings
+
+#### 8. Member Behavior Segmentation
+**Description**: Analyze usage patterns by member type and cohort
+**User Story**: As a marketing analyst, I need to understand different user segments, so that I can create targeted retention and growth campaigns.
+
+**Key Capabilities**:
+- Member vs. casual user behavior comparison
+- Cohort analysis (new members vs. long-term)
+- Usage frequency distribution (daily commuters vs. occasional riders)
+- Churn prediction for at-risk members
+
+**Business Impact**:
+- Targeted retention campaigns for at-risk segments
+- Personalized pricing for different user types
+- 5-10% improvement in member retention
+
+### Nice-to-Have Features (Future)
+
+#### 9. Real-Time Dashboard Updates
+**Description**: Live demand tracking with 5-minute data refresh
+**User Story**: As an operations manager, I need to see current bike availability and demand in real-time, so that I can respond to urgent imbalances.
+
+**Technical Implementation**:
+- Streaming ingestion from Citi Bike real-time APIs
+- In-memory caching for low-latency queries
+- WebSocket updates to dashboard
+
+#### 10. Multi-City Expansion
+**Description**: Support bike-share systems in other major cities
+**User Story**: As a corporate operations director, I need to compare performance across all our markets, so that I can identify best practices and underperforming regions.
+
+**Technical Implementation**:
+- Parameterized pipelines for different cities
+- City dimension table
+- Cross-market benchmarking dashboards
+
+#### 11. Mobile App Integration
+**Description**: Push rebalancing alerts and insights to field teams
+**User Story**: As a rebalancing driver, I need mobile notifications when urgent imbalances occur, so that I can respond immediately.
+
+**Technical Implementation**:
+- REST API for dashboard data
+- Mobile app with push notifications
+- GPS tracking for rebalancing fleet
+
+## 4. User Experience & Use Cases
+
+### Primary Use Case: Daily Operations Planning
+
+**Scenario**: Operations manager reviews demand patterns every morning to plan the day's rebalancing strategy.
+
+**Journey**:
+1. **Morning Dashboard Review** (8:00 AM)
+   - Open Streamlit dashboard on tablet
+   - Review yesterday's trip volume vs. 7-day average
+   - Check top 20 busiest stations for today's focus areas
+   - Note weather forecast and expected demand impact
+
+2. **Identify Problem Stations**
+   - Sort stations by imbalance score
+   - See that Union Square has chronic empty bike problem (net source)
+   - Note that Central Park South has full dock problem (net sink)
+   - Review hourly heatmap: peak demand 8-9 AM and 5-6 PM
+
+3. **Plan Rebalancing Routes**
+   - Assign truck to move bikes from Union Square → Central Park South
+   - Schedule for 6:30 AM (before morning rush)
+   - Brief team on expected demand patterns for the day
+
+4. **Monitor Throughout Day**
+   - Check dashboard at lunch to see if morning predictions held
+   - Adjust afternoon rebalancing based on actual vs. predicted
+
+**Outcome**: Proactive rebalancing reduces empty/full station incidents by 40%, improves customer satisfaction
+
+### Secondary Use Case: Weather Impact Decision Making
+
+**Scenario**: Business analyst needs to understand if bad weather justifies deploying fewer rebalancing trucks.
+
+**Journey**:
+1. **Weather Forecast Review**
+   - Check tomorrow's forecast: 45°F and 60% chance of rain
+   - Open Weather Impact Analysis page in dashboard
+
+2. **Analyze Historical Patterns**
+   - Filter for similar conditions (40-50°F, rainy)
+   - See that demand drops 35% on rainy days below 50°F
+   - View temperature correlation chart: demand peaks at 65-75°F
+
+3. **What-If Analysis**
+   - Use temperature slider: at 45°F, predict ~8,000 trips (vs. 12,000 typical)
+   - Apply rain filter: further 30% reduction expected
+   - Final prediction: ~5,600 trips tomorrow
+
+4. **Make Staffing Decision**
+   - Recommend reducing rebalancing crew from 3 trucks to 2
+   - Save ~$400 in labor costs
+   - Communicate to ops team with data backing
+
+**Outcome**: Weather-informed staffing decisions reduce operational costs by 20% on low-demand days
+
+### Tertiary Use Case: Expansion Planning
+
+**Scenario**: Urban planner identifies underserved areas for new station placement.
+
+**Journey**:
+1. **Review Station Performance**
+   - Open Station Performance Rankings page
+   - Sort by trips per bike per day
+   - Identify top performers: >8 trips/bike/day (Union Square, Times Square)
+   - Identify underperformers: <2 trips/bike/day (outer boroughs)
+
+2. **Analyze Demand Gaps**
+   - Use geographic map view
+   - Notice cluster of high-performing stations in Midtown
+   - See demand "gap" between Midtown and Upper East Side
+   - Review net flow: Midtown stations are net sources (need more capacity)
+
+3. **Build Business Case**
+   - Calculate: 10 trips/bike/day at $3.50/trip = $35/bike/day revenue
+   - Propose new station at 72nd & Lexington (between successful clusters)
+   - Estimate 50 bikes × $35/day × 365 days = $639k annual revenue potential
+   - Justify $200k capital investment (ROI < 4 months)
+
+4. **Present to Leadership**
+   - Export dashboard charts to presentation
+   - Show demand density map
+   - Demonstrate ROI calculation
+
+**Outcome**: Data-driven expansion decisions ensure new stations achieve profitability targets within 6 months
+
+## 5. Technical Architecture Principles
+
+### Design Principles
+1. **Data Quality First**: Automated validation at every stage ensures trustworthy analytics
+2. **Operational Reliability**: Idempotent pipelines and daily automation eliminate manual errors
+3. **Fast Time-to-Insight**: Optimized queries and dashboards deliver answers in seconds
+4. **Scalable Foundation**: Modular architecture supports adding new data sources without disruption
+5. **Cost Efficiency**: Embedded DuckDB eliminates expensive infrastructure while maintaining performance
+
+### Data Flow Architecture
+```
+NYC Citi Bike API → dlt Ingestion → bike_ingestion.duckdb
+Open-Meteo API → dlt Ingestion → weather_ingestion.duckdb
+                       ↓
+              Data Quality Validation
+              (Great Expectations)
+                       ↓
+           dbt Transformations (DuckDB)
+         staging → core → marts layers
+                       ↓
+              warehouse.duckdb
+                       ↓
+        ┌──────────────┴──────────────┐
+        ↓                              ↓
+  Streamlit Dashboards        Jupyter Analysis
+  (Operations Teams)          (Data Scientists)
+```
+
+### Key Architecture Decisions
+
+**Why DuckDB?**
+- Embedded analytics database: no infrastructure to manage
+- Exceptional performance for analytical queries (<1 sec for complex aggregations)
+- Native Parquet support for efficient storage
+- Perfect for datasets up to 100GB (current: ~5GB)
+
+**Why dlt for Ingestion?**
+- Idempotent loading: safe to re-run without duplicates
+- Automatic schema evolution: adapts to source changes
+- Built-in deduplication using merge write mode
+- Minimal code required
+
+**Why Great Expectations for Validation?**
+- Declarative data quality rules
+- Auto-generated validation reports
+- Fail-fast pipeline execution on critical issues
+- Comprehensive expectation library (200+ built-in checks)
+
+**Why dbt for Transformation?**
+- SQL-based (accessible to analysts, not just engineers)
+- Layered architecture (staging → core → marts)
+- Built-in testing framework
+- Documentation and lineage out-of-the-box
+
+**Why Airflow for Orchestration?**
+- Industry-standard workflow engine
+- Handles dependencies and retries
+- Scheduling and monitoring built-in
+- Python-based DAG definitions
+
+## 6. Constraints & Assumptions
+
+### Operational Constraints
+- **Geographic Scope**: NYC only (single market focus)
+- **Data Latency**: Daily batch updates (not real-time)
+- **Historical Analysis**: Optimized for historical trends, not live monitoring
+- **Capacity**: Designed for <100GB data (sufficient for 5+ years of NYC data)
+
+### Data Assumptions
+- **Data Availability**: NYC Citi Bike continues publishing monthly trip data
+- **API Reliability**: Open-Meteo weather API remains accessible
+- **Schema Stability**: Major schema changes in source data are rare
+- **Data Quality**: Source data is generally clean (>95% completeness)
+
+### User Assumptions
+- **Technical Proficiency**: Users comfortable with web dashboards and basic filtering
+- **Access**: Operations teams have reliable internet and modern browsers
+- **Training**: 1-hour onboarding sufficient for dashboard proficiency
+
+## 7. Out of Scope (Non-Goals)
+
+### Current Release
+❌ **Real-Time Monitoring**: Live bike availability tracking (future: feature #9)
+❌ **Predictive Models**: ML-based demand forecasting (future: feature #6)
+❌ **Route Optimization**: Automated rebalancing route generation (future: feature #7)
+❌ **Mobile Apps**: Native iOS/Android applications (future: feature #11)
+❌ **Multi-City**: Support for cities beyond NYC (future: feature #10)
+❌ **User Authentication**: Dashboard access controls (not needed for internal tool)
+❌ **Advanced Weather**: Wind, humidity, air quality analysis (post-MVP)
+
+### Technical Non-Goals
+❌ **Cloud Deployment**: Kubernetes, containerization, CI/CD (v2.0+)
+❌ **Distributed Processing**: Spark, Dask for large-scale compute
+❌ **Data Governance**: PII handling, GDPR compliance, audit logs
+❌ **High Availability**: Multi-region redundancy, automatic failover
+❌ **Cost Optimization**: Resource monitoring, auto-scaling
+
+## 8. Product Roadmap
+
+### Q1 2025 - MVP Launch
+**Goal**: Deliver core demand analytics for NYC operations team
+
+**Deliverables**:
+- ✅ Daily demand analytics dashboard
+- ✅ Weather impact analysis
+- ✅ Station performance rankings
+- ✅ Automated daily pipeline
+- ✅ Data quality monitoring
+
+**Success Criteria**:
+- Operations team uses dashboard daily
+- 40% reduction in empty/full station complaints
+- <3 second dashboard load times
+
+### Q2 2025 - Intelligence Layer
+**Goal**: Add predictive capabilities for proactive operations
+
+**Deliverables**:
+- Demand forecasting models (feature #6)
+- Member behavior segmentation (feature #8)
+- Alert system for quality issues
+- Expanded weather variables (humidity, wind)
+
+**Success Criteria**:
+- >85% forecast accuracy
+- 20% reduction in rebalancing trips
+- 5 identified member segments
+
+### Q3 2025 - Optimization
+**Goal**: Automate rebalancing route planning
+
+**Deliverables**:
+- Route optimization engine (feature #7)
+- Integration with fleet management systems
+- Mobile notifications for drivers
+- Performance dashboards for rebalancing teams
+
+**Success Criteria**:
+- 30% reduction in rebalancing miles
+- <5 minute route generation time
+- Driver adoption >90%
+
+### Q4 2025 - Expansion
+**Goal**: Scale to multi-city operations
+
+**Deliverables**:
+- Multi-city support (feature #10)
+- Cross-market benchmarking
+- Standardized data ingestion for 5 cities
+- Executive dashboards
+
+**Success Criteria**:
+- 3-5 additional cities onboarded
+- Consistent data quality across markets
+- Executive monthly reporting automated
+
+### 2026 Vision - Real-Time & Advanced Analytics
+**Long-Term Goals**:
+- Real-time dashboard updates (5-minute refresh)
+- Advanced ML: causal inference, A/B testing
+- Dynamic pricing recommendations
+- Integration with bike manufacturing for predictive maintenance
+
+**North Star**:
+Become the industry-standard platform for bike-share demand intelligence, used by 20+ cities globally to optimize their operations and reduce costs by 25%+.
 
 ---
 
-## 1. The Big Picture (The "Why")
-
-### 1.1. Project Vision & Purpose
-
-To create an AI-native data engineering environment where specialized subagents autonomously extend and enhance data pipelines using well-defined standards, patterns, and practices. This platform demonstrates how proper structure, module-specific documentation, and specialized subagents enable the complete data lifecycle—from ingestion to visualization—with minimal human intervention.
-
-### 1.2. Target Audience
-
-Data engineers who want to automate their work by leveraging AI coding assistants and specialized subagents to rapidly build, extend, and maintain data pipelines without writing everything from scratch.
-
-### 1.3. User Personas
-
-- **Persona 1: "Alex the Automation Engineer"**
-  - **Role:** Data Engineer at a mid-sized company managing multiple data sources and dashboards.
-  - **Goal:** Wants to delegate data engineering tasks to specialized subagents that understand module-specific patterns and can autonomously implement features from ingestion to visualization.
-  - **Frustration:** Most data projects lack clear patterns, comprehensive documentation, and specialized tooling, making it impossible for AI tools to understand module-specific conventions (dlt patterns vs dbt patterns vs Streamlit patterns). Generic AI-generated code doesn't follow the project's established practices for each component.
-
-### 1.4. Success Metrics
-
-**The platform succeeds when specialized subagents can autonomously handle the complete end-to-end data engineering workflow:**
-
-- **New Data Source Integration:** The **dlt-ingestion subagent** can add new data sources (from API specification to DuckDB tables) following established dlt patterns with minimal human guidance.
-- **Exploratory Data Analysis:** The **data-analysis subagent** can generate meaningful EDA notebooks that follow project conventions and integrate with existing analysis workflows.
-- **Data Modeling:** The **dbt-modeling subagent** can create dbt models (staging, core, marts) that align with the existing schema structure, naming conventions, and materialization strategies.
-- **Quality Validation:** The **data-quality subagent** can implement Great Expectations suites for new data sources that match the rigor and patterns of existing validations.
-- **Data Serving:** The **streamlit-viz subagent** can build or extend Streamlit dashboards and visualizations that integrate seamlessly with the existing UI/UX patterns.
-- **Workflow Orchestration:** The **airflow-orchestration subagent** can update DAGs to include new tasks with correct dependencies and error handling.
-- **Code Quality:** All subagent-generated code consistently passes linting, formatting, and testing standards without requiring manual fixes.
-- **Documentation Maintenance:** Subagents can update relevant module-specific CLAUDE.md files when making changes to their respective components.
-
----
-
-## 2. The Product Experience (The "What")
-
-### 2.1. Core Features
-
-- **Standardized Project Architecture:** Clear separation of concerns with modular components (dlt_pipeline, dbt, data_quality, streamlit_app, airflow) that follow consistent patterns within each module.
-
-- **Comprehensive Module-Specific Documentation:**
-  - Root CLAUDE.md with overall architecture and cross-cutting concerns
-  - Component-specific CLAUDE.md files (dlt_pipeline/CLAUDE.md, dbt/CLAUDE.md, data_quality/CLAUDE.md, streamlit_app/CLAUDE.md, airflow/CLAUDE.md, notebooks/CLAUDE.md) containing module-specific coding practices, patterns, and conventions
-
-- **Specialized Subagent System:**
-  - Subagents defined in `.awos/subagents/` directory, each specialized for specific modules/tasks
-  - **dlt-ingestion subagent:** Expert in dlt patterns, API extraction, data loading, and DuckDB integration
-  - **dbt-modeling subagent:** Expert in dbt patterns, SQL transformations, testing, and documentation
-  - **data-quality subagent:** Expert in Great Expectations patterns, validation suites, and data profiling
-  - **streamlit-viz subagent:** Expert in Streamlit patterns, Plotly visualizations, and dashboard design
-  - **airflow-orchestration subagent:** Expert in Airflow patterns, DAG design, and task dependencies
-  - **data-analysis subagent:** Expert in Jupyter notebooks, Polars/Pandas analysis, and statistical methods
-
-- **AWOS Workflow System:** Slash commands (/awos:product, /awos:spec, /awos:roadmap, /awos:tasks, /awos:implement) that guide the orchestrator agent through structured product development workflows, delegating implementation to specialized subagents.
-
-- **Reference Implementation Patterns:** Complete examples of data ingestion (bike, weather), validation, transformation, and visualization that serve as templates for subagents to follow.
-
-- **Modular, Extensible Pipeline Components:** dlt resources, dbt models, Great Expectations suites, and Streamlit pages designed to be easily extended or replicated by specialized subagents.
-
-- **Quality Gates at Every Layer:** Automated validation (Great Expectations), transformation testing (dbt tests), code quality checks (ruff), and unit tests (pytest) that subagents can replicate.
-
-- **End-to-End Orchestration:** Airflow DAGs demonstrating how all components integrate, providing subagents with a blueprint for adding new workflows.
-
-### 2.2. User Journey
-
-**Typical Workflow: Adding a New Data Source with Specialized Subagents**
-
-1. **Initialization:** Alex opens the project in Claude Code and requests: "Add traffic congestion data from NYC DOT API to analyze its correlation with bike demand."
-
-2. **Planning Phase:** The orchestrator agent reads the root CLAUDE.md, uses `/awos:spec` to create a functional specification for the new feature, then `/awos:tasks` to break it into module-specific implementation steps.
-
-3. **Data Ingestion:** The orchestrator delegates to the **dlt-ingestion subagent**, which:
-   - Reads `dlt_pipeline/CLAUDE.md` for module-specific patterns
-   - Examines bike.py and weather.py reference implementations
-   - Creates `dlt_pipeline/traffic.py` following dlt conventions (resource decorators, merge strategy, error handling, Polars parsing, DuckDB destinations)
-
-4. **Data Quality Validation:** The orchestrator delegates to the **data-quality subagent**, which:
-   - Reads `data_quality/CLAUDE.md` for validation patterns
-   - Reviews existing expectation suites (bike_trips_suite, weather_suite)
-   - Creates `validate_traffic_data.py` with appropriate Great Expectations checks following the established structure
-
-5. **Data Modeling:** The orchestrator delegates to the **dbt-modeling subagent**, which:
-   - Reads `dbt/CLAUDE.md` for dbt-specific conventions
-   - Examines the three-layer structure (staging/core/marts)
-   - Creates `models/staging/stg_traffic.sql` to clean raw data
-   - Updates core models to join traffic with trips
-   - Creates `models/marts/mart_traffic_impact.sql` for analytics
-   - Adds appropriate schema.yml tests following dbt patterns
-
-6. **Exploratory Analysis:** The orchestrator delegates to the **data-analysis subagent**, which:
-   - Reads `notebooks/CLAUDE.md` for analysis patterns
-   - Reviews existing EDA notebooks (polars_eda.ipynb)
-   - Creates `traffic_analysis.ipynb` with visualizations and statistical tests following notebook conventions
-
-7. **Visualization:** The orchestrator delegates to the **streamlit-viz subagent**, which:
-   - Reads `streamlit_app/CLAUDE.md` for UI/UX patterns
-   - Examines existing pages (Home.py, Weather.py)
-   - Creates `pages/Traffic_Impact.py` with interactive visualizations following the established dashboard structure and styling
-
-8. **Orchestration Update:** The orchestrator delegates to the **airflow-orchestration subagent**, which:
-   - Reads `airflow/CLAUDE.md` for DAG patterns
-   - Reviews `bike_weather_dag.py` structure
-   - Adds traffic ingestion and validation tasks with correct dependencies and error handling
-
-9. **Testing & Documentation:** Each subagent:
-   - Generates module-specific unit tests following patterns in `tests/`
-   - Runs quality checks appropriate to their module
-   - Updates their respective CLAUDE.md files with new patterns or learnings
-
-10. **Review & Deploy:** Alex reviews the subagent-generated code across all modules, makes minor adjustments if needed, and runs the complete pipeline end-to-end.
-
-**Result:** A new data source fully integrated across all platform layers—ingestion, quality, modeling, analysis, visualization, and orchestration—with each component following its module-specific conventions and patterns, completed in a fraction of the time manual coding would require.
-
----
-
-## 3. Project Boundaries
-
-### 3.1. What's In-Scope for this Version
-
-**Core Infrastructure:**
-- Complete reference implementation with 2-3 example data sources (bike trips, weather, optionally one more)
-- Root-level CLAUDE.md with overall architecture, cross-cutting concerns, and common commands
-- Module-specific CLAUDE.md files for each major component:
-  - `dlt_pipeline/CLAUDE.md`: dlt patterns, resource conventions, API extraction, error handling
-  - `dbt/CLAUDE.md`: dbt patterns, model structure, testing conventions, documentation practices
-  - `data_quality/CLAUDE.md`: Great Expectations patterns, suite structure, validation practices
-  - `streamlit_app/CLAUDE.md`: Streamlit patterns, UI/UX conventions, visualization standards
-  - `airflow/CLAUDE.md`: DAG patterns, task structure, dependency management, error handling
-  - `notebooks/CLAUDE.md`: Analysis patterns, notebook structure, visualization standards
-
-**Specialized Subagent System:**
-- Subagent definitions in `.awos/subagents/` directory:
-  - `dlt-ingestion.md`: Specialized in data extraction and loading patterns
-  - `dbt-modeling.md`: Specialized in SQL transformations and dbt conventions
-  - `data-quality.md`: Specialized in validation and quality checks
-  - `streamlit-viz.md`: Specialized in dashboard and visualization development
-  - `airflow-orchestration.md`: Specialized in workflow orchestration
-  - `data-analysis.md`: Specialized in exploratory analysis and notebooks
-- Clear instructions for when the orchestrator should delegate to each subagent
-
-**AWOS Workflow Integration:**
-- Full AWOS command suite (/awos:product, /awos:spec, /awos:roadmap, /awos:architecture, /awos:tasks, /awos:implement)
-- Templates for product definition, functional specs, technical specs, and task lists
-- Orchestrator agent that delegates implementation tasks to specialized subagents
-
-**Quality & Standards:**
-- Comprehensive linting and formatting configuration (ruff)
-- Great Expectations validation framework with example suites
-- dbt testing patterns (schema tests, data tests)
-- pytest unit testing examples
-- Git workflow and commit conventions
-
-**Documentation:**
-- README with setup instructions and demo walkthrough
-- Inline code documentation and docstrings
-- dbt model documentation and lineage
-- Great Expectations data docs
-- Subagent documentation explaining their roles and capabilities
-
-**End-to-End Example:**
-- Complete data pipeline from ingestion to visualization
-- Airflow orchestration demonstrating task dependencies
-- Multiple visualization pages showing different analytical approaches
-
-### 3.2. What's Out-of-Scope (Non-Goals)
-
-**Production Deployment:**
-- Cloud infrastructure setup (AWS, GCP, Azure)
-- Container orchestration (Kubernetes, ECS)
-- Production-grade security and authentication
-- Multi-environment configuration (dev/staging/prod)
-- CI/CD pipeline automation
-
-**Advanced Features:**
-- Real-time streaming data ingestion (Kafka, Kinesis)
-- Machine learning model training and deployment
-- Advanced time-series forecasting
-- Complex event processing
-- Data lineage tracking tools (separate from dbt docs)
-
-**Enterprise Features:**
-- Multi-tenant architecture
-- Role-based access control (RBAC)
-- Data governance and cataloging (Collibra, Alation)
-- Cost optimization and resource management
-- Advanced monitoring and alerting (beyond Airflow)
-
-**Scalability:**
-- Distributed computing (Spark, Ray)
-- Large-scale data processing (petabyte scale)
-- High-availability configurations
-- Performance optimization for production workloads
-
-**Alternative Interfaces:**
-- Mobile applications
-- REST API for programmatic access
-- Command-line interface tools
-- Third-party integrations (Slack, email notifications)
-
-**Note:** This is a demonstration and reference platform optimized for subagent-assisted development, not a production-ready data infrastructure. The focus is on clarity, module-specific patterns, specialized subagents, and extensibility, not on operational robustness or scale.
+**Document Version**: 1.0
+**Last Updated**: 2025-01-04
+**Author**: Derived from project README and architecture
+**Status**: Active - reflects current implementation
