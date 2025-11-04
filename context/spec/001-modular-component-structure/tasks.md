@@ -9,22 +9,22 @@ This task list breaks down the Modular Component Structure feature into **vertic
 
 **Goal:** Establish the basic Python package structure and enhance root documentation so subagents understand cross-cutting standards.
 
-- [ ] **Add Python package structure for Airflow imports**
-  - [ ] Create `data_quality/__init__.py` with docstring
-  - [ ] Verify `dlt_pipeline/__init__.py` exists
-  - [ ] Test imports in Python REPL to ensure no ImportError
+- [x] **Add Python package structure for Airflow imports**
+  - [x] Create `data_quality/__init__.py` with docstring
+  - [x] Verify `dlt_pipeline/__init__.py` exists
+  - [x] Test imports in Python REPL to ensure no ImportError
 
-- [ ] **Enhance root CLAUDE.md with cross-cutting standards**
-  - [ ] Use Context7 MCP to research Python logging best practices for data pipelines
-  - [ ] Use Context7 MCP to research error handling patterns for ETL workflows
-  - [ ] Add "Cross-Cutting Standards" section with logging format, error handling, code style
-  - [ ] Add "Module Execution Order" section with dependency chain diagram
-  - [ ] Add "Module Communication Pattern" section with DuckDB file paths table
-  - [ ] Add "DuckDB Locking Constraints" section
-  - [ ] Add placeholder "Module-Specific CLAUDE.md Files" section (will be populated in later slices)
+- [x] **Enhance root CLAUDE.md with cross-cutting standards**
+  - [x] Use Context7 MCP to research Python logging best practices for data pipelines
+  - [x] Use Context7 MCP to research error handling patterns for ETL workflows
+  - [x] Add "Cross-Cutting Standards" section with logging format, error handling, code style
+  - [x] Add "Module Execution Order" section with dependency chain diagram
+  - [x] Add "Module Communication Pattern" section with DuckDB file paths table
+  - [x] Add "DuckDB Locking Constraints" section
+  - [x] Add placeholder "Module-Specific CLAUDE.md Files" section (will be populated in later slices)
 
 - [ ] **Validation**
-  - [ ] Verify existing pipeline still works (run `uv run python dlt_pipeline/bike.py`)
+  - [ ] Verify existing pipeline still works (run `uv run python dlt_pipeline/weather.py`)
   - [ ] Run `uv run ruff check .` to ensure no new linting errors
 
 ---
