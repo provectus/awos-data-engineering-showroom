@@ -91,17 +91,17 @@ Enhance the mart with weather-adjusted demand calculations.
 
 Create the Holiday Impact page in Streamlit with basic structure, data connection, and the limited data banner.
 
-- [ ] Create basic dashboard page structure:
-  - [ ] Sub-task: Create `streamlit_app/pages/Holiday_Impact.py` with page config (title, icon 🎉, wide layout)
-  - [ ] Sub-task: Add database connection using `duckdb.connect("duckdb/warehouse.duckdb", read_only=True)` with `@st.cache_resource`
-  - [ ] Sub-task: Create cached query function `@st.cache_data(ttl=600)` to load `mart_holiday_analysis` data
-  - [ ] Sub-task: Add data validation logic: count unique holidays with trip data
-  - [ ] Sub-task: Display banner if `<2 holidays`: "⚠️ Limited historical data available. Insights will strengthen as more data accumulates over time."
-  - [ ] Sub-task: Add page title: "Holiday Impact Analysis"
-- [ ] Test page loads:
-  - [ ] Sub-task: Run `uv run streamlit run streamlit_app/Home.py`
-  - [ ] Sub-task: Navigate to "Holiday Impact" in sidebar
-  - [ ] Sub-task: Verify page loads in <3 seconds and banner displays
+- [x] Create basic dashboard page structure:
+  - [x] Sub-task: Create `streamlit_app/pages/Holiday_Impact.py` with page config (title, icon 🎉, wide layout)
+  - [x] Sub-task: Add database connection using `duckdb.connect("duckdb/warehouse.duckdb", read_only=True)` with `@st.cache_resource`
+  - [x] Sub-task: Create cached query function `@st.cache_data(ttl=600)` to load `mart_holiday_analysis` data
+  - [x] Sub-task: Add data validation logic: count unique holidays with trip data
+  - [x] Sub-task: Display banner if `<2 holidays`: "⚠️ Limited historical data available. Insights will strengthen as more data accumulates over time."
+  - [x] Sub-task: Add page title: "Holiday Impact Analysis"
+- [x] Test page loads:
+  - [x] Sub-task: Run `uv run streamlit run streamlit_app/Home.py`
+  - [x] Sub-task: Navigate to "Holiday Impact" in sidebar
+  - [x] Sub-task: Verify page loads in <3 seconds and banner displays
 
 **Validation:** Dashboard page is accessible, connects to database, displays banner, and loads quickly.
 
@@ -111,17 +111,17 @@ Create the Holiday Impact page in Streamlit with basic structure, data connectio
 
 Add the bar chart comparing average demand on holidays vs. non-holidays.
 
-- [ ] Implement demand comparison bar chart:
-  - [ ] Sub-task: Write SQL query to calculate average weather-adjusted demand by `holiday_category` (Federal, Observance, Non-Holiday Baseline)
-  - [ ] Sub-task: Calculate percentage change vs. baseline for each category
-  - [ ] Sub-task: Create Plotly grouped bar chart (`px.bar`) with holiday categories on X-axis, avg demand on Y-axis
-  - [ ] Sub-task: Add percentage change labels on each bar
-  - [ ] Sub-task: Add hover tooltips showing: exact trip count, number of holidays, date range
-  - [ ] Sub-task: Use distinct colors for each category (blue for Federal, orange for State, gray for baseline)
-  - [ ] Sub-task: Add chart to dashboard page with section header
-- [ ] Test visualization:
-  - [ ] Sub-task: Refresh dashboard and verify chart displays correctly
-  - [ ] Sub-task: Hover over bars to verify tooltips show correct data
+- [x] Implement demand comparison bar chart:
+  - [x] Sub-task: Write SQL query to calculate average weather-adjusted demand by `holiday_category` (Federal, Observance, Non-Holiday Baseline)
+  - [x] Sub-task: Calculate percentage change vs. baseline for each category
+  - [x] Sub-task: Create Plotly grouped bar chart (`px.bar`) with holiday categories on X-axis, avg demand on Y-axis
+  - [x] Sub-task: Add percentage change labels on each bar
+  - [x] Sub-task: Add hover tooltips showing: exact trip count, number of holidays, date range
+  - [x] Sub-task: Use distinct colors for each category (blue for Federal, orange for State, gray for baseline)
+  - [x] Sub-task: Add chart to dashboard page with section header
+- [x] Test visualization:
+  - [x] Sub-task: Refresh dashboard and verify chart displays correctly
+  - [x] Sub-task: Hover over bars to verify tooltips show correct data
 
 **Validation:** Bar chart displays with 3 bars, percentage labels, and interactive tooltips. Data matches expected values from mart.
 
@@ -131,19 +131,19 @@ Add the bar chart comparing average demand on holidays vs. non-holidays.
 
 Add the calendar view with demand overlay and holiday highlighting.
 
-- [ ] Implement calendar heatmap:
-  - [ ] Sub-task: Write SQL query to get all dates for 2024 with `is_holiday`, `holiday_name`, `trips_total`, data status
-  - [ ] Sub-task: Create Plotly heatmap or custom grid layout for 12-month calendar view
-  - [ ] Sub-task: Set cell background color intensity based on `trips_total` (darker = higher demand)
-  - [ ] Sub-task: Add distinct border or icon for holiday dates
-  - [ ] Sub-task: Display holiday names as text labels on holiday cells
-  - [ ] Sub-task: Show "No Data" indicator (gray cells) where `trips_total IS NULL`
-  - [ ] Sub-task: Add color scale legend ("Low Demand" → "High Demand")
-  - [ ] Sub-task: Add calendar to dashboard page with section header
-- [ ] Test visualization:
-  - [ ] Sub-task: Verify calendar displays full year 2024
-  - [ ] Sub-task: Verify holidays are visually distinct and labeled
-  - [ ] Sub-task: Verify color intensity varies with demand levels
+- [x] Implement calendar heatmap:
+  - [x] Sub-task: Write SQL query to get all dates for 2024 with `is_holiday`, `holiday_name`, `trips_total`, data status
+  - [x] Sub-task: Create Plotly heatmap or custom grid layout for 12-month calendar view
+  - [x] Sub-task: Set cell background color intensity based on `trips_total` (darker = higher demand)
+  - [x] Sub-task: Add distinct border or icon for holiday dates
+  - [x] Sub-task: Display holiday names as text labels on holiday cells
+  - [x] Sub-task: Show "No Data" indicator (gray cells) where `trips_total IS NULL`
+  - [x] Sub-task: Add color scale legend ("Low Demand" → "High Demand")
+  - [x] Sub-task: Add calendar to dashboard page with section header
+- [x] Test visualization:
+  - [x] Sub-task: Verify calendar displays full year 2024
+  - [x] Sub-task: Verify holidays are visually distinct and labeled
+  - [x] Sub-task: Verify color intensity varies with demand levels
 
 **Validation:** Calendar heatmap displays 2024, highlights holidays with borders/icons, shows holiday names, color-codes demand levels, and handles no-data gracefully.
 
@@ -288,9 +288,9 @@ Update documentation and add final touches to prepare for deployment.
 ## Progress Tracking
 
 **Total Slices:** 13
-**Completed:** 4
+**Completed:** 7
 **In Progress:** 0
-**Remaining:** 9
+**Remaining:** 6
 
 ---
 
