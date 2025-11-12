@@ -13,9 +13,9 @@ from datetime import timedelta
 from pathlib import Path
 
 import pendulum
-
-from airflow.providers.standard.operators.bash import BashOperator
-from airflow.sdk import DAG, task
+from airflow import DAG
+from airflow.decorators import task
+from airflow.operators.bash import BashOperator
 
 # Add parent directory to path to import our modules
 project_root = Path(__file__).parent.parent.parent
@@ -41,7 +41,7 @@ with DAG(
     dag_id="bike_weather_pipeline",
     default_args=default_args,
     description="End-to-end bike and weather data pipeline",
-    schedule="@daily",
+    schedule_interval="@daily",
     start_date=pendulum.datetime(2024, 5, 1, tz="UTC"),
     catchup=False,
     tags=["data-ingestion", "analytics", "demo"],
@@ -58,7 +58,7 @@ with DAG(
     def ingest_bike_data() -> str:
         """Task to ingest bike trip data using dlt."""
         # For demo, ingest May and June 2024
-        months = ["2024-05", "2024-06"]
+        months = ["202405", "202406"]
         result = run_bike_pipeline(months)
         return str(result)
 

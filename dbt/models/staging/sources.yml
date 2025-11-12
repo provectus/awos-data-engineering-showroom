@@ -3,7 +3,6 @@ version: 2
 sources:
   - name: raw_bike
     description: "Raw bike trip data ingested via dlt pipeline"
-    database: bike_ingestion
     schema: raw_bike
     tables:
       - name: bike_trips
@@ -71,7 +70,6 @@ sources:
 
   - name: raw_weather
     description: "Raw weather data ingested via dlt pipeline from Open-Meteo API"
-    database: weather_ingestion
     schema: raw_weather
     tables:
       - name: daily_weather
@@ -106,45 +104,3 @@ sources:
 
           - name: _dlt_id
             description: "DLT unique record identifier"
-
-  - name: raw_holidays
-    description: "Raw US holiday data ingested via dlt pipeline from Nager.Date API"
-    database: holiday_ingestion
-    schema: raw_holidays
-    tables:
-      - name: us_holidays
-        description: "US federal and state holidays for NYC area"
-        columns:
-          - name: date
-            description: "Holiday date in YYYY-MM-DD format (VARCHAR)"
-            tests:
-              - unique
-              - not_null
-
-          - name: holiday_name
-            description: "Official holiday name"
-
-          - name: local_name
-            description: "Local or alternative name for the holiday"
-
-          - name: is_nationwide
-            description: "Whether holiday applies to all states (boolean)"
-
-          - name: is_fixed
-            description: "Whether holiday date is fixed annually (boolean)"
-
-          - name: holiday_types
-            description: "Comma-separated list of holiday types (e.g., Public, School)"
-
-          - name: counties
-            description: "Comma-separated state codes (e.g., US-CA, US-CT), NULL if nationwide"
-
-          - name: _dlt_load_timestamp
-            description: "DLT pipeline load timestamp"
-
-          - name: _dlt_load_id
-            description: "DLT pipeline load batch identifier"
-
-          - name: _dlt_id
-            description: "DLT unique record identifier"
-

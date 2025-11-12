@@ -6,9 +6,10 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "altair>=4.2.2",
-    "apache-airflow>=3.1.1",
+    "apache-airflow==2.10.3",
     "dbt-duckdb>=1.9.6",
     "dlt[duckdb]>=1.18.1",
+    "duckdb>=1.4.1",
     "duckdb-engine>=0.17.0",
     "graphviz>=0.21",
     "great-expectations>=1.8.1",

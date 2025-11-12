@@ -1,6 +1,6 @@
-# 🚲 Weather-Aware Bike Demand Platform
+# 🚲 Bike Demand Analytics Platform
 
-A data platform demo showcasing modern data stack with incremental value from adding new data sources. This project demonstrates a complete end-to-end data pipeline analyzing NYC bike-share demand and weather impact.
+A data platform showcasing modern data stack with incremental value from adding new data sources. This project demonstrates a complete end-to-end data pipeline analyzing NYC bike-share demand and weather impact.
 
 ## 📋 Table of Contents
 
@@ -259,18 +259,14 @@ Navigate to the "Weather" page to see weather impact analysis.
 
 ### Option 2: Airflow Orchestration
 
-#### Initialize Airflow
+#### Initialize Airflow in standalone mode 
+
 ```bash
-export AIRFLOW_HOME=./airflow
+export AIRFLOW_HOME=$PWD/airflow
 ```
 
-#### Start Airflow
 ```bash
-# Terminal 1: Start scheduler
-uv run airflow scheduler
-
-# Terminal 2: Start webserver
-uv run airflow webserver --port 8080
+uv run airflow standalone
 ```
 
 #### Trigger the DAG
@@ -278,7 +274,7 @@ uv run airflow webserver --port 8080
 uv run airflow dags trigger bike_weather_pipeline
 ```
 
-Or use the Airflow UI at http://localhost:8080 (login: admin/admin)
+Or use the Airflow UI at http://localhost:8080 (login: will be displayed in logs)
 
 ## 🎬 Demo Walkthrough
 
@@ -455,6 +451,13 @@ cd dbt && uv run dbt build
 uv run python airflow/dags/bike_weather_dag.py
 # Refresh Airflow UI or restart scheduler
 ```
+If that will not help try to add this to your bashrc/zshrc file 
+
+´´´bash
+export PYTHONFAULTHANDLER=true
+export AIRFLOW__CORE__LOAD_EXAMPLES=False
+export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
+´´´
 
 ### Performance Tips
 

@@ -5,7 +5,3 @@ log_format = "JSON"
 [sources]
 # Configuration for data sources can be added here
 
-[destination.duckdb]
-# DuckDB destination configuration
-credentials = "./duckdb/warehouse.duckdb"
-

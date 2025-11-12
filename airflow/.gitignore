@@ -1,1 +1,5 @@
 *.generated
+webserver_config.py
+simple_auth_manager_passwords.json.generated
+logs
+standalone_admin_password.txt
