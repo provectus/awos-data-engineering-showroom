@@ -194,7 +194,7 @@ uv run pytest tests/ -v
 
 ## 🏃 Running the Pipeline
 
-### Option 1: Manual Execution (Recommended for First Run)
+### Option 1: Manual Execution (Not Recommended)
 
 #### Step 1: Ingest Bike Data
 ```bash
