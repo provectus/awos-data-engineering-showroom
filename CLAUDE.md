@@ -148,8 +148,6 @@ Open-Meteo API            Checkpoints    Models      Dashboards
 4. **Consumption**: Streamlit/Jupyter query `warehouse.duckdb` marts for analytics
 
 ### Key Database Locations
-- `duckdb/bike_ingestion.duckdb` - Raw bike trip data from dlt
-- `duckdb/weather_ingestion.duckdb` - Raw weather data from dlt
 - `duckdb/warehouse.duckdb` - Transformed analytics tables (dbt output)
 
 ### dbt Model Layers
