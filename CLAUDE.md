@@ -59,6 +59,13 @@ uv run python dlt_pipeline/bike.py
 
 # Ingest weather data (fetches from Open-Meteo API)
 uv run python dlt_pipeline/weather.py
+
+# Ingest holiday data (fetches US holidays from Nager.Date API)
+# Default: ingests 2024 holidays
+uv run python dlt_pipeline/holidays.py
+
+# To ingest holidays for specific years, edit holidays.py main block:
+# result = run_holiday_pipeline([2024, 2025, 2026])
 ```
 
 **Data Quality Validation (Great Expectations)**:
