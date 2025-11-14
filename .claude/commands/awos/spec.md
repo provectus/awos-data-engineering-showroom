@@ -2,7 +2,7 @@
 description: Creates the Functional Spec — what the feature does for the user.
 ---
 
-Notes:
+Make sure to:
 1. Give clarifying questions
 2. Go over feature to feature to better detail them and understand the sequence of implementation  
 
