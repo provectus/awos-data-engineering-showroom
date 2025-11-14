@@ -9,7 +9,7 @@ _This roadmap outlines our strategic direction based on customer needs and busin
 _Build the core data infrastructure for holiday and event analysis._
 
 - [ ] **Holiday Data Integration**
-  - [ ] **Holiday Calendar Ingestion:** Import US federal and local NYC holidays into the data warehouse
+  - [x] **Holiday Calendar Ingestion:** Import US federal and local NYC holidays into the data warehouse
   - [ ] **Historical Holiday Analysis:** Correlate past holidays with bike demand patterns to identify trends
 
 - [ ] **Special Events Data Integration**
@@ -18,6 +18,10 @@ _Build the core data infrastructure for holiday and event analysis._
   - [ ] **Event Classification System:** Categorize events by size - Small (5,000-15,000), Medium (15,001-30,000), Large (30,001+)
   - [ ] **Station Proximity Mapping:** Identify which Citi Bike stations are within walking distance of each event venue
   - [ ] **Historical Event Impact Database:** Build database of past large events with their participant counts and measured demand impact on nearby stations
+
+- [ ] **Pipeline Orchestration Enhancement**
+  - [ ] **Airflow DAG Integration:** Integrate holiday ingestion pipeline into Airflow orchestration workflow
+  - [ ] **End-to-End Automation:** Ensure all new data sources (holidays, future events) are orchestrated with proper dependencies and monitoring
 
 ---
 
