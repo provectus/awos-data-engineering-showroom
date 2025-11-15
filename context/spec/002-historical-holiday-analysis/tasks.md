@@ -46,17 +46,17 @@
   - [x] Add ORDER BY holiday_date to final SELECT
   - [x] **Verification:** Query mart, verify 4 rows (Memorial Day, Juneteenth, Puerto Rican Day Parade, Truman Day), all have baseline_days_count between 25-30, all have calculated percentage changes
 
-- [ ] **Slice 4: Create mart_holiday_impact_by_station**
-  - [ ] Create file `dbt/models/marts/mart_holiday_impact_by_station.sql`
-  - [ ] Add config block: `{{ config(materialized='table') }}`
-  - [ ] Reuse holidays and baseline_days CTEs from summary mart
-  - [ ] CTE `holiday_metrics_by_station`: JOIN stg_bike_trips with holidays, GROUP BY date and start_station_id, COUNT(*) as trips_holiday
-  - [ ] CTE `baseline_metrics_by_station`: JOIN stg_bike_trips with baseline_days, GROUP BY holiday_date and start_station_id, AVG(trip_count) as trips_baseline
-  - [ ] Final SELECT: Join holiday and baseline metrics, join with dim_stations using `LEFT JOIN {{ ref('dim_stations') }} s ON station_id = s.station_id`
-  - [ ] Include columns: holiday_date, holiday_name, station_id, station_name, area, latitude, longitude
-  - [ ] Calculate trips_holiday, trips_baseline, trips_abs_change, trips_pct_change
-  - [ ] Add ORDER BY holiday_date, trips_pct_change DESC
-  - [ ] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_by_station`, verify ~8000 rows (4 holidays × ~2000 stations), query Financial District stations for Memorial Day to confirm large negative trips_pct_change
+- [x] **Slice 4: Create mart_holiday_impact_by_station**
+  - [x] Create file `dbt/models/marts/mart_holiday_impact_by_station.sql`
+  - [x] Add config block: `{{ config(materialized='table') }}`
+  - [x] Reuse holidays and baseline_days CTEs from summary mart
+  - [x] CTE `holiday_metrics_by_station`: JOIN stg_bike_trips with holidays, GROUP BY date and start_station_id, COUNT(*) as trips_holiday
+  - [x] CTE `baseline_metrics_by_station`: JOIN stg_bike_trips with baseline_days, GROUP BY holiday_date and start_station_id, AVG(trip_count) as trips_baseline
+  - [x] Final SELECT: Join holiday and baseline metrics, join with dim_stations using `LEFT JOIN {{ ref('dim_stations') }} s ON station_id = s.station_id`
+  - [x] Include columns: holiday_date, holiday_name, station_id, station_name, area, latitude, longitude
+  - [x] Calculate trips_holiday, trips_baseline, trips_abs_change, trips_pct_change
+  - [x] Add ORDER BY holiday_date, trips_pct_change DESC
+  - [x] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_by_station`, verify ~8000 rows (4 holidays × ~2000 stations), query Financial District stations for Memorial Day to confirm large negative trips_pct_change
 
 - [ ] **Slice 5: Create mart_holiday_impact_by_hour and mart_holiday_impact_by_area**
   - [ ] Create file `dbt/models/marts/mart_holiday_impact_by_hour.sql`:
