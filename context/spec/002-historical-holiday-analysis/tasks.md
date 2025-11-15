@@ -94,22 +94,22 @@
     - not_null test on station_count
   - [x] **Verification:** Run `cd dbt && uv run dbt test --select mart_holiday_impact*`, confirm all tests pass (should be ~12-15 tests total)
 
-- [ ] **Slice 7: Create Streamlit dashboard skeleton with Section 1 (Selector & KPIs)**
-  - [ ] Create file `streamlit_app/pages/Holiday_Impact.py`
-  - [ ] Add module docstring: "Streamlit dashboard for holiday impact analysis"
-  - [ ] Add imports: streamlit as st, duckdb, pandas as pd, plotly.express as px, plotly.graph_objects as go
-  - [ ] Add page config: `st.set_page_config(page_title="Holiday Impact Analysis", page_icon="🎉", layout="wide")`
-  - [ ] Add `get_db_connection()` function with `@st.cache_resource` decorator returning duckdb.connect("duckdb/warehouse.duckdb", read_only=True)
-  - [ ] Add `load_holiday_summary()` function with `@st.cache_data(ttl=600)` decorator querying mart_holiday_impact_summary, return df
-  - [ ] Add main() function with st.title("🎉 Holiday Impact Analysis")
-  - [ ] Section 1: Holiday selector using st.selectbox with holidays from holiday_summary['holiday_name'].unique()
-  - [ ] Filter data to selected holiday using df[df['holiday_name'] == selected_holiday].iloc[0]
-  - [ ] Section 1: Create 3 columns with st.columns(3)
-  - [ ] KPI Card 1: st.metric("Total Trips Change", f"{trips_pct_change:.1f}%", delta=f"{trips_abs_change:,.0f} trips")
-  - [ ] KPI Card 2: st.metric("Avg Duration Change", f"{duration_pct_change:.1f}%", delta=f"{duration_abs_change:.1f} mins")
-  - [ ] KPI Card 3: st.metric("Statistical Significance", "Pending", delta="p-value TBD") (placeholder for now)
-  - [ ] Add `if __name__ == "__main__": main()` block
-  - [ ] **Verification:** Run `uv run streamlit run streamlit_app/pages/Holiday_Impact.py`, select Memorial Day from dropdown, verify KPI cards show negative trips% (~-30%) and positive duration% (~+20%)
+- [x] **Slice 7: Create Streamlit dashboard skeleton with Section 1 (Selector & KPIs)**
+  - [x] Create file `streamlit_app/pages/Holiday_Impact.py`
+  - [x] Add module docstring: "Streamlit dashboard for holiday impact analysis"
+  - [x] Add imports: streamlit as st, duckdb, pandas as pd, plotly.express as px, plotly.graph_objects as go
+  - [x] **IMPORTANT FIX:** DO NOT add `st.set_page_config()` in pages/ files - only Home.py should have it for multi-page apps
+  - [x] Add `get_db_connection()` function with `@st.cache_resource` decorator returning duckdb.connect("duckdb/warehouse.duckdb", read_only=True)
+  - [x] Add `load_holiday_summary()` function with `@st.cache_data(ttl=600)` decorator querying mart_holiday_impact_summary, return df
+  - [x] Add main() function with st.title("🎉 Holiday Impact Analysis")
+  - [x] Section 1: Holiday selector using st.selectbox with holidays from holiday_summary['holiday_name'].unique()
+  - [x] Filter data to selected holiday using df[df['holiday_name'] == selected_holiday].iloc[0]
+  - [x] Section 1: Create 3 columns with st.columns(3)
+  - [x] KPI Card 1: st.metric("Total Trips Change", f"{trips_pct_change:.1f}%", delta=f"{trips_abs_change:,.0f} trips")
+  - [x] KPI Card 2: st.metric("Avg Duration Change", f"{duration_pct_change:.1f}%", delta=f"{duration_abs_change:.1f} mins")
+  - [x] KPI Card 3: st.metric("Statistical Significance", "Pending", delta="p-value TBD") (placeholder for now)
+  - [x] Add `if __name__ == "__main__": main()` block
+  - [x] **Verification:** Run `uv run streamlit run streamlit_app/Home.py` (NOT pages/Holiday_Impact.py!), navigate to "Holiday Impact" in left sidebar, select Memorial Day, verify trips -52.9% and duration +0.9%
 
 - [ ] **Slice 8: Add Section 2 (Demand Comparison Chart)**
   - [ ] Add st.markdown("---") divider after Section 1
