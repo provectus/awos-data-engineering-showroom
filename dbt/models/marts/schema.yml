@@ -117,3 +117,197 @@ models:
 
       - name: member_pct
         description: Percentage of member trips starting from this station
+
+  - name: mart_holiday_impact_summary
+    description: Citywide holiday impact analysis comparing holiday demand to baseline weekdays
+    columns:
+      - name: holiday_date
+        description: Date of the holiday
+        tests:
+          - unique
+          - not_null
+
+      - name: holiday_name
+        description: Name of the holiday
+        tests:
+          - not_null
+
+      - name: is_major
+        description: Whether this is a major holiday
+        tests:
+          - not_null
+
+      - name: is_working_day
+        description: Whether this holiday is a working day
+        tests:
+          - not_null
+
+      - name: baseline_days_count
+        description: Number of baseline weekdays used for comparison
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 30
+
+      - name: total_trips_holiday
+        description: Total number of trips on the holiday
+        tests:
+          - not_null
+
+      - name: total_trips_baseline
+        description: Average daily trips on baseline weekdays
+        tests:
+          - not_null
+
+  - name: mart_holiday_impact_by_station
+    description: Station-level holiday impact analysis showing demand changes at each station
+    columns:
+      - name: holiday_date
+        description: Date of the holiday
+        tests:
+          - not_null
+
+      - name: holiday_name
+        description: Name of the holiday
+        tests:
+          - not_null
+
+      - name: station_id
+        description: Unique identifier for the station
+        tests:
+          - not_null
+
+      - name: station_name
+        description: Name of the station
+        tests:
+          - not_null
+
+      - name: area
+        description: Geographic area/neighborhood of the station
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - Manhattan - Financial
+                - Manhattan - Midtown
+                - Manhattan - Upper West
+                - Manhattan - Upper East
+                - Manhattan - Downtown
+                - Brooklyn
+                - Queens
+                - Bronx
+                - Jersey City
+                - Other
+
+      - name: latitude
+        description: Station latitude coordinate
+        tests:
+          - not_null
+
+      - name: longitude
+        description: Station longitude coordinate
+        tests:
+          - not_null
+
+      - name: trips_holiday
+        description: Number of trips from this station on the holiday
+        tests:
+          - not_null
+
+      - name: trips_baseline
+        description: Average daily trips from this station on baseline weekdays
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - holiday_date
+            - station_id
+
+  - name: mart_holiday_impact_by_hour
+    description: Hourly demand patterns on holidays compared to baseline weekdays
+    columns:
+      - name: holiday_date
+        description: Date of the holiday
+        tests:
+          - not_null
+
+      - name: holiday_name
+        description: Name of the holiday
+        tests:
+          - not_null
+
+      - name: hour_of_day
+        description: Hour of day (0-23)
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 23
+
+      - name: trips_holiday
+        description: Number of trips during this hour on the holiday
+        tests:
+          - not_null
+
+      - name: trips_baseline
+        description: Average trips during this hour on baseline weekdays
+        tests:
+          - not_null
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - holiday_date
+            - hour_of_day
+
+  - name: mart_holiday_impact_by_area
+    description: Geographic area-level holiday impact analysis for operational planning
+    columns:
+      - name: holiday_date
+        description: Date of the holiday
+        tests:
+          - not_null
+
+      - name: holiday_name
+        description: Name of the holiday
+        tests:
+          - not_null
+
+      - name: area_name
+        description: Geographic area/neighborhood name
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - Manhattan - Financial
+                - Manhattan - Midtown
+                - Manhattan - Upper West
+                - Manhattan - Upper East
+                - Manhattan - Downtown
+                - Brooklyn
+                - Queens
+                - Bronx
+                - Jersey City
+                - Other
+
+      - name: station_count
+        description: Number of stations in this area
+        tests:
+          - not_null
+
+      - name: trips_holiday
+        description: Total trips in this area on the holiday
+        tests:
+          - not_null
+
+      - name: trips_baseline
+        description: Average daily trips in this area on baseline weekdays
+        tests:
+          - not_null
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - holiday_date
+            - area_name

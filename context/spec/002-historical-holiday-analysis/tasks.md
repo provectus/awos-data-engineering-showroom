@@ -75,24 +75,24 @@
     - Final SELECT: holiday_date, holiday_name, area_name, station_count, trips_holiday, trips_baseline, trips_pct_change, avg_station_trips_holiday, avg_station_trips_baseline
   - [x] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_by_hour mart_holiday_impact_by_area`, verify ~96 rows for by_hour (4 holidays × 24 hours) and ~40 rows for by_area (4 holidays × ~10 areas)
 
-- [ ] **Slice 6: Add dbt tests for all 4 mart models**
-  - [ ] Update `dbt/models/marts/schema.yml` (or create if doesn't exist)
-  - [ ] Add model documentation and tests for `mart_holiday_impact_summary`:
+- [x] **Slice 6: Add dbt tests for all 4 mart models**
+  - [x] Update `dbt/models/marts/schema.yml` (or create if doesn't exist)
+  - [x] Add model documentation and tests for `mart_holiday_impact_summary`:
     - unique test on holiday_date
     - not_null test on holiday_date
     - not_null test on baseline_days_count
     - dbt_utils.accepted_range test on baseline_days_count (min_value: 1, max_value: 30)
-  - [ ] Add model documentation and tests for `mart_holiday_impact_by_station`:
+  - [x] Add model documentation and tests for `mart_holiday_impact_by_station`:
     - not_null test on area
     - accepted_values test on area with all 10 defined areas
     - dbt_utils.unique_combination_of_columns test on (holiday_date || '-' || station_id)
-  - [ ] Add model documentation and tests for `mart_holiday_impact_by_hour`:
+  - [x] Add model documentation and tests for `mart_holiday_impact_by_hour`:
     - not_null test on hour_of_day
     - dbt_utils.accepted_range test on hour_of_day (min_value: 0, max_value: 23)
-  - [ ] Add model documentation and tests for `mart_holiday_impact_by_area`:
+  - [x] Add model documentation and tests for `mart_holiday_impact_by_area`:
     - not_null test on area_name
     - not_null test on station_count
-  - [ ] **Verification:** Run `cd dbt && uv run dbt test --select mart_holiday_impact*`, confirm all tests pass (should be ~12-15 tests total)
+  - [x] **Verification:** Run `cd dbt && uv run dbt test --select mart_holiday_impact*`, confirm all tests pass (should be ~12-15 tests total)
 
 - [ ] **Slice 7: Create Streamlit dashboard skeleton with Section 1 (Selector & KPIs)**
   - [ ] Create file `streamlit_app/pages/Holiday_Impact.py`
