@@ -2,18 +2,41 @@ version: 2
 
 models:
   - name: dim_stations
-    description: "Dimension table of all bike stations"
+    description: "Dimension table of all bike stations with geographic attributes"
     columns:
       - name: station_id
         description: "Unique station identifier"
         tests:
           - unique
           - not_null
-      
+
       - name: station_name
         description: "Name of the station"
         tests:
           - not_null
+
+      - name: name_variations
+        description: "Count of different name variations for this station in source data"
+
+      - name: latitude
+        description: "Station latitude coordinate (WGS84)"
+        tests:
+          - not_null
+
+      - name: longitude
+        description: "Station longitude coordinate (WGS84)"
+        tests:
+          - not_null
+
+      - name: area
+        description: "Geographic area classification (Manhattan neighborhoods, Brooklyn, Queens, Bronx, Jersey City, Other)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Manhattan - Financial', 'Manhattan - Midtown', 'Manhattan - Upper West',
+                         'Manhattan - Upper East', 'Manhattan - Downtown', 'Brooklyn', 'Queens',
+                         'Bronx', 'Jersey City', 'Other']
 
   - name: fct_trips_daily
     description: "Daily aggregated trip facts by member type"

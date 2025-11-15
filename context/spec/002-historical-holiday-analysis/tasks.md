@@ -2,11 +2,11 @@
 
 ## Vertical Slices (Incremental, Runnable Tasks)
 
-- [ ] **Slice 1: Enhance dim_stations with lat/lon and basic area classification**
-  - [ ] Add CTE `stations_with_coords` to extract lat/lon from `stg_bike_trips` grouped by start_station_id (use FIRST(start_lat) and FIRST(start_lng) to get non-null values)
-  - [ ] Add latitude DOUBLE column to final SELECT in `dbt/models/core/dim_stations.sql`
-  - [ ] Add longitude DOUBLE column to final SELECT
-  - [ ] Add area VARCHAR column using CASE statement with lat/lon ranges:
+- [x] **Slice 1: Enhance dim_stations with lat/lon and basic area classification**
+  - [x] Add CTE `stations_with_coords` to extract lat/lon from `stg_bike_trips` grouped by start_station_id (use FIRST(start_lat) and FIRST(start_lng) to get non-null values)
+  - [x] Add latitude DOUBLE column to final SELECT in `dbt/models/core/dim_stations.sql`
+  - [x] Add longitude DOUBLE column to final SELECT
+  - [x] Add area VARCHAR column using CASE statement with lat/lon ranges:
     - Manhattan - Financial: lat BETWEEN 40.700-40.720, lon BETWEEN -74.020 to -73.980
     - Manhattan - Midtown: lat BETWEEN 40.740-40.780, lon BETWEEN -74.010 to -73.970
     - Manhattan - Upper West: lat BETWEEN 40.780-40.800, lon BETWEEN -74.000 to -73.950
@@ -17,34 +17,34 @@
     - Bronx: lat BETWEEN 40.790-40.880, lon BETWEEN -73.930 to -73.830
     - Jersey City: lat BETWEEN 40.680-40.760, lon BETWEEN -74.080 to -74.020
     - Other: ELSE clause
-  - [ ] Add WHERE clause to filter out NULL lat/lon values
-  - [ ] Add sanity check filters: latitude BETWEEN 40.5 AND 41.0, longitude BETWEEN -74.3 AND -73.7
-  - [ ] **Verification:** Run `cd dbt && uv run dbt run --select dim_stations`, then query `SELECT area, COUNT(*) FROM main_core.dim_stations GROUP BY area` to verify ~2000 stations have areas assigned, minimal 'Other' count
+  - [x] Add WHERE clause to filter out NULL lat/lon values
+  - [x] Add sanity check filters: latitude BETWEEN 40.5 AND 41.0, longitude BETWEEN -74.3 AND -73.7
+  - [x] **Verification:** Run `cd dbt && uv run dbt run --select dim_stations`, then query `SELECT area, COUNT(*) FROM main_core.dim_stations GROUP BY area` to verify ~2000 stations have areas assigned, minimal 'Other' count
 
-- [ ] **Slice 2: Create mart_holiday_impact_summary with one holiday (Memorial Day)**
-  - [ ] Create file `dbt/models/marts/mart_holiday_impact_summary.sql`
-  - [ ] Add config block: `{{ config(materialized='table') }}`
-  - [ ] CTE `holidays`: SELECT date, holiday_name, is_major, is_working_day FROM stg_holidays WHERE date = '2024-05-27' (Memorial Day only)
-  - [ ] CTE `baseline_days`: Cross join holidays with distinct ride_date from stg_bike_trips, filter to 15 days before/after using `dateadd('day', -15, h.date)` and `dateadd('day', 15, h.date)`, exclude weekends using `dayofweek(d.ride_date) NOT IN (0, 6)`, exclude other holidays
-  - [ ] CTE `holiday_metrics`: JOIN stg_bike_trips with holidays on ride_date = date, aggregate COUNT(*) as total_trips_holiday, AVG(ride_mins) as avg_duration_holiday
-  - [ ] CTE `baseline_metrics`: JOIN stg_bike_trips with baseline_days on ride_date, aggregate and average metrics (divide by baseline_days_count)
-  - [ ] Final SELECT: Join holiday_metrics and baseline_metrics, calculate trips_abs_change (holiday - baseline), trips_pct_change using formula `((holiday - baseline) / NULLIF(baseline, 0)) * 100`
-  - [ ] Add similar calculations for duration_pct_change
-  - [ ] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_summary`, query the mart to verify 1 row exists with Memorial Day showing trips_pct_change between -20% and -40%
+- [x] **Slice 2: Create mart_holiday_impact_summary with one holiday (Memorial Day)**
+  - [x] Create file `dbt/models/marts/mart_holiday_impact_summary.sql`
+  - [x] Add config block: `{{ config(materialized='table') }}`
+  - [x] CTE `holidays`: SELECT date, holiday_name, is_major, is_working_day FROM stg_holidays WHERE date = '2024-05-27' (Memorial Day only)
+  - [x] CTE `baseline_days`: Cross join holidays with distinct ride_date from stg_bike_trips, filter to 15 days before/after using `dateadd('day', -15, h.date)` and `dateadd('day', 15, h.date)`, exclude weekends using `dayofweek(d.ride_date) NOT IN (0, 6)`, exclude other holidays
+  - [x] CTE `holiday_metrics`: JOIN stg_bike_trips with holidays on ride_date = date, aggregate COUNT(*) as total_trips_holiday, AVG(ride_mins) as avg_duration_holiday
+  - [x] CTE `baseline_metrics`: JOIN stg_bike_trips with baseline_days on ride_date, aggregate and average metrics (divide by baseline_days_count)
+  - [x] Final SELECT: Join holiday_metrics and baseline_metrics, calculate trips_abs_change (holiday - baseline), trips_pct_change using formula `((holiday - baseline) / NULLIF(baseline, 0)) * 100`
+  - [x] Add similar calculations for duration_pct_change
+  - [x] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_summary`, query the mart to verify 1 row exists with Memorial Day showing trips_pct_change between -20% and -40%
 
-- [ ] **Slice 3: Expand mart_holiday_impact_summary to all holidays**
-  - [ ] Update `holidays` CTE: Remove Memorial Day date filter, change to WHERE date BETWEEN '2024-05-01' AND '2024-06-30' to process all May-June holidays
-  - [ ] Add member/casual breakdown to `holiday_metrics` CTE:
+- [x] **Slice 3: Expand mart_holiday_impact_summary to all holidays**
+  - [x] Update `holidays` CTE: Remove Memorial Day date filter, change to WHERE date BETWEEN '2024-05-01' AND '2024-06-30' to process all May-June holidays
+  - [x] Add member/casual breakdown to `holiday_metrics` CTE:
     - SUM(CASE WHEN member_casual = 'member' THEN 1 ELSE 0 END) as member_trips_holiday
     - SUM(CASE WHEN member_casual = 'casual' THEN 1 ELSE 0 END) as casual_trips_holiday
-  - [ ] Add same member/casual breakdown to `baseline_metrics` CTE
-  - [ ] Calculate member_trips_pct_change and casual_trips_pct_change in final SELECT
-  - [ ] Add baseline metadata columns to final SELECT:
+  - [x] Add same member/casual breakdown to `baseline_metrics` CTE
+  - [x] Calculate member_trips_pct_change and casual_trips_pct_change in final SELECT
+  - [x] Add baseline metadata columns to final SELECT:
     - MIN(baseline_date) as baseline_start_date
     - MAX(baseline_date) as baseline_end_date
     - COUNT(DISTINCT baseline_date) as baseline_days_count
-  - [ ] Add ORDER BY holiday_date to final SELECT
-  - [ ] **Verification:** Query mart, verify 4 rows (Memorial Day, Juneteenth, Puerto Rican Day Parade, Truman Day), all have baseline_days_count between 25-30, all have calculated percentage changes
+  - [x] Add ORDER BY holiday_date to final SELECT
+  - [x] **Verification:** Query mart, verify 4 rows (Memorial Day, Juneteenth, Puerto Rican Day Parade, Truman Day), all have baseline_days_count between 25-30, all have calculated percentage changes
 
 - [ ] **Slice 4: Create mart_holiday_impact_by_station**
   - [ ] Create file `dbt/models/marts/mart_holiday_impact_by_station.sql`
