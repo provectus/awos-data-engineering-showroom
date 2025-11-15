@@ -58,22 +58,22 @@
   - [x] Add ORDER BY holiday_date, trips_pct_change DESC
   - [x] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_by_station`, verify ~8000 rows (4 holidays × ~2000 stations), query Financial District stations for Memorial Day to confirm large negative trips_pct_change
 
-- [ ] **Slice 5: Create mart_holiday_impact_by_hour and mart_holiday_impact_by_area**
-  - [ ] Create file `dbt/models/marts/mart_holiday_impact_by_hour.sql`:
+- [x] **Slice 5: Create mart_holiday_impact_by_hour and mart_holiday_impact_by_area**
+  - [x] Create file `dbt/models/marts/mart_holiday_impact_by_hour.sql`:
     - Add config: `materialized='table'`
     - Reuse holidays and baseline_days CTEs
     - Extract hour using `EXTRACT(HOUR FROM started_at) as hour_of_day`
     - CTE `holiday_metrics_by_hour`: GROUP BY date and hour_of_day, COUNT(*) as trips_holiday
     - CTE `baseline_metrics_by_hour`: GROUP BY holiday_date and hour_of_day, AVG(trip_count) as trips_baseline
     - Final SELECT: holiday_date, holiday_name, hour_of_day (0-23), trips_holiday, trips_baseline, trips_pct_change
-  - [ ] Create file `dbt/models/marts/mart_holiday_impact_by_area.sql`:
+  - [x] Create file `dbt/models/marts/mart_holiday_impact_by_area.sql`:
     - Add config: `materialized='table'`
     - Reuse holidays and baseline_days CTEs
     - JOIN stg_bike_trips with dim_stations to get area for each trip
     - CTE `holiday_metrics_by_area`: GROUP BY date and area, COUNT(DISTINCT station_id) as station_count, COUNT(*) as trips_holiday
     - CTE `baseline_metrics_by_area`: GROUP BY holiday_date and area, aggregate trips
     - Final SELECT: holiday_date, holiday_name, area_name, station_count, trips_holiday, trips_baseline, trips_pct_change, avg_station_trips_holiday, avg_station_trips_baseline
-  - [ ] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_by_hour mart_holiday_impact_by_area`, verify ~96 rows for by_hour (4 holidays × 24 hours) and ~40 rows for by_area (4 holidays × ~10 areas)
+  - [x] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_by_hour mart_holiday_impact_by_area`, verify ~96 rows for by_hour (4 holidays × 24 hours) and ~40 rows for by_area (4 holidays × ~10 areas)
 
 - [ ] **Slice 6: Add dbt tests for all 4 mart models**
   - [ ] Update `dbt/models/marts/schema.yml` (or create if doesn't exist)
