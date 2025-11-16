@@ -3,11 +3,14 @@
 This page shows how holidays affect bike demand patterns compared to regular weekdays.
 """
 
-import duckdb
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from sklearn.cluster import KMeans
+
+import duckdb
 
 
 # Page configuration
@@ -215,33 +218,65 @@ def main():
         "Shorter holiday bars indicate decreased demand, taller bars indicate increased demand."
     )
 
-    # Section 3: Station-Level Heatmap
+    # Section 3: Station-Level Demand Changes (Clustered)
     st.markdown("---")
-    st.subheader("🗺️ Station-Level Demand Changes")
+    st.subheader("🗺️ Neighborhood-Level Demand Changes")
+
+    # Add cluster count slider
+    n_clusters = st.slider(
+        "Number of Neighborhoods to Display",
+        min_value=10,
+        max_value=50,
+        value=30,
+        step=5,
+        help="Adjust to show more or fewer neighborhood clusters"
+    )
 
     # Load station data
     station_data = load_holiday_by_station(holiday_data['holiday_date'])
 
     if not station_data.empty:
+        # Perform K-Means clustering
+        coords = station_data[['latitude', 'longitude']].values
+        kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+        station_data['cluster'] = kmeans.fit_predict(coords)
+
+        # Aggregate by cluster
+        cluster_agg = station_data.groupby('cluster').agg({
+            'trips_holiday': 'sum',
+            'trips_baseline': 'sum',
+            'trips_abs_change': 'sum',
+            'latitude': 'mean',  # Cluster centroid
+            'longitude': 'mean',
+            'station_id': 'count',  # Number of stations in cluster
+            'area': lambda x: x.mode()[0] if len(x.mode()) > 0 else 'Mixed'  # Most common area
+        }).reset_index()
+
+        # Calculate percentage change for clusters
+        cluster_agg['trips_pct_change'] = (
+            (cluster_agg['trips_holiday'] - cluster_agg['trips_baseline']) /
+            cluster_agg['trips_baseline'].replace(0, np.nan)
+        ) * 100
+
         # Apply rebalancing flag
-        station_data['rebalancing_flag'] = station_data['trips_pct_change'].apply(get_rebalancing_flag)
+        cluster_agg['rebalancing_flag'] = cluster_agg['trips_pct_change'].apply(get_rebalancing_flag)
 
         # Create map
         fig = px.scatter_mapbox(
-            station_data,
+            cluster_agg,
             lat="latitude",
             lon="longitude",
             color="trips_pct_change",
-            size=abs(station_data["trips_abs_change"]),
+            size=abs(cluster_agg["trips_abs_change"]),
             color_continuous_scale=["red", "yellow", "green"],
             color_continuous_midpoint=0,
-            hover_name="station_name",
             hover_data={
                 "area": True,
                 "trips_pct_change": ":.1f",
                 "trips_holiday": ":,.0f",
                 "trips_baseline": ":.1f",
                 "rebalancing_flag": True,
+                "station_id": True,  # Show number of stations in cluster
                 "latitude": False,
                 "longitude": False
             },
@@ -249,7 +284,7 @@ def main():
             center={"lat": 40.73, "lon": -73.94},
             mapbox_style="open-street-map",
             height=600,
-            title=f"Station Demand Changes: {selected_holiday}"
+            title=f"Neighborhood Demand Changes: {selected_holiday} ({n_clusters} Clusters)"
         )
 
         fig.update_layout(
@@ -264,16 +299,16 @@ def main():
         # Add legend/interpretation
         col1, col2, col3 = st.columns(3)
         with col1:
-            st.metric("🔴 Red Stations", "Decreased Demand", "Remove bikes")
+            st.metric("🔴 Red Clusters", "Decreased Demand", "Remove bikes")
         with col2:
-            st.metric("🟡 Yellow Stations", "Stable Demand", "No action")
+            st.metric("🟡 Yellow Clusters", "Stable Demand", "No action")
         with col3:
-            st.metric("🟢 Green Stations", "Increased Demand", "Add bikes")
+            st.metric("🟢 Green Clusters", "Increased Demand", "Add bikes")
 
         st.caption(
-            "💡 **Interpretation:** Larger circles indicate bigger absolute changes. "
-            "Hover over stations to see details. Red stations need bike removal, "
-            "green stations need more bikes added."
+            f"💡 **Interpretation:** Map shows {n_clusters} neighborhood clusters aggregated from {len(station_data)} stations. "
+            "Larger circles indicate bigger absolute changes. Hover to see cluster details including number of stations. "
+            "Adjust slider above to show more or fewer neighborhoods."
         )
     else:
         st.warning("No station data available for this holiday.")

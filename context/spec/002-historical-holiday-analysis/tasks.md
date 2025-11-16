@@ -121,18 +121,25 @@
   - [x] Display with st.plotly_chart(fig, use_container_width=True)
   - [x] **Verification:** Chart renders with Memorial Day showing shorter blue bars for Total Trips and Member Trips, slightly taller bar for Avg Duration
 
-- [ ] **Slice 9: Add Section 3 (Station Heatmap)**
-  - [ ] Add function `load_holiday_by_station(holiday_date)` with @st.cache_data(ttl=600), query mart_holiday_impact_by_station WHERE holiday_date = date
-  - [ ] Add helper function `get_rebalancing_flag(pct_change)`: if pct_change > 30 return 'Add bikes', elif pct_change < -30 return 'Remove bikes', else return 'No action'
-  - [ ] Load station data: `station_data = load_holiday_by_station(holiday_data['holiday_date'])`
-  - [ ] Apply rebalancing flag: `station_data['rebalancing_flag'] = station_data['trips_pct_change'].apply(get_rebalancing_flag)`
-  - [ ] Add st.markdown("---") and st.subheader("🗺️ Station-Level Demand Changes")
-  - [ ] Create Plotly Scattermapbox: `fig = px.scatter_mapbox(station_data, lat="latitude", lon="longitude", color="trips_pct_change", size=abs(station_data["trips_abs_change"]))`
-  - [ ] Set color scale: `color_continuous_scale=["red", "yellow", "green"]`, color_continuous_midpoint=0
-  - [ ] Add hover data: `hover_name="station_name"`, hover_data with area, trips_pct_change, rebalancing_flag
-  - [ ] Set map style: `mapbox_style="open-street-map"`, zoom=10, center={"lat": 40.73, "lon": -73.94}
-  - [ ] Display with st.plotly_chart(fig, use_container_width=True)
-  - [ ] **Verification:** Map loads centered on NYC, Financial District stations show red markers (decreased demand) on Memorial Day, Central Park area shows green markers, hover tooltips work
+- [x] **Slice 9: Add Section 3 (Neighborhood-Level Heatmap with K-Means Clustering)**
+  - [x] Add imports: `from sklearn.cluster import KMeans` and `import numpy as np`
+  - [x] Add function `load_holiday_by_station(holiday_date)` with @st.cache_data(ttl=600), query mart_holiday_impact_by_station WHERE holiday_date = date
+  - [x] Add helper function `get_rebalancing_flag(pct_change)`: if pct_change > 30 return 'Add bikes', elif pct_change < -30 return 'Remove bikes', else return 'No action'
+  - [x] Add st.slider for cluster count (10-50, default 30, step 5)
+  - [x] Load station data: `station_data = load_holiday_by_station(holiday_data['holiday_date'])`
+  - [x] Implement K-Means clustering: `kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)`
+  - [x] Aggregate by cluster: sum trips, mean lat/lon, count stations, mode area
+  - [x] Calculate cluster-level percentage change
+  - [x] Apply rebalancing flag to clusters
+  - [x] Add st.markdown("---") and st.subheader("🗺️ Neighborhood-Level Demand Changes")
+  - [x] Create Plotly Scattermapbox with clustered data: `fig = px.scatter_mapbox(cluster_agg, lat="latitude", lon="longitude", color="trips_pct_change", size=abs(cluster_agg["trips_abs_change"]))`
+  - [x] Set color scale: `color_continuous_scale=["red", "yellow", "green"]`, color_continuous_midpoint=0
+  - [x] Add hover data: area, trips_pct_change, trips_holiday, trips_baseline, rebalancing_flag, station_id (count of stations in cluster)
+  - [x] Set map style: `mapbox_style="open-street-map"`, zoom=10, center={"lat": 40.73, "lon": -73.94}
+  - [x] Display with st.plotly_chart(fig, use_container_width=True)
+  - [x] Add dynamic caption explaining clustering (shows cluster count and total stations)
+  - [x] Install scikit-learn: `uv add scikit-learn`
+  - [x] **Verification:** Map shows 30 clusters (default) instead of 2,000+ stations, slider adjusts granularity 10-50, Financial District shows red clusters on Memorial Day, tooltip shows station count per cluster
 
 - [ ] **Slice 10: Add Section 4 (Hourly Pattern) and Section 5 (Top Stations)**
   - [ ] Add function `load_holiday_by_hour(holiday_date)` with @st.cache_data(ttl=600), query mart_holiday_impact_by_hour WHERE holiday_date = date
