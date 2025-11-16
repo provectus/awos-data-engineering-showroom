@@ -10,8 +10,12 @@ import plotly.graph_objects as go
 import streamlit as st
 
 
-# Note: Page configuration is set in Home.py for multi-page apps
-# Individual pages in pages/ folder should NOT have st.set_page_config()
+# Page configuration
+st.set_page_config(
+    page_title="Holiday Impact Analysis",
+    page_icon="🎉",
+    layout="wide",
+)
 
 
 @st.cache_resource
