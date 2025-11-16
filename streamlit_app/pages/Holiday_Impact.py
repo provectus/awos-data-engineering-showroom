@@ -8,6 +8,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
+from scipy import stats
 from sklearn.cluster import KMeans
 
 import duckdb
@@ -80,6 +81,51 @@ def load_holiday_by_hour(holiday_date):
         return pd.DataFrame()
 
 
+@st.cache_data(ttl=600)
+def calculate_statistical_significance(holiday_date, baseline_start, baseline_end):
+    """Calculate statistical significance using t-test between holiday trip count and baseline daily trip counts.
+
+    Returns:
+        tuple: (p_value, is_significant, test_type)
+    """
+    con = get_db_connection()
+
+    # Get trip count for holiday
+    holiday_query = """
+        SELECT COUNT(*) as trip_count
+        FROM main_staging.stg_bike_trips
+        WHERE ride_date = ?
+    """
+
+    # Get daily trip counts for baseline period
+    baseline_query = """
+        SELECT ride_date, COUNT(*) as trip_count
+        FROM main_staging.stg_bike_trips
+        WHERE ride_date BETWEEN ? AND ?
+          AND ride_date != ?
+          AND dayofweek(ride_date) NOT IN (0, 6)
+        GROUP BY ride_date
+    """
+
+    try:
+        holiday_count = con.execute(holiday_query, [holiday_date]).df()['trip_count'].values[0]
+        baseline_counts = con.execute(baseline_query, [baseline_start, baseline_end, holiday_date]).df()['trip_count'].values
+
+        # Check if we have enough baseline days
+        if len(baseline_counts) < 5:
+            return None, False, "insufficient_data"
+
+        # Perform one-sample t-test: compare holiday count against baseline distribution
+        t_stat, p_value = stats.ttest_1samp(baseline_counts, holiday_count)
+        is_significant = p_value < 0.05
+
+        return p_value, is_significant, "t_test"
+
+    except Exception as e:
+        st.warning(f"Could not calculate statistical significance: {e}")
+        return None, False, "error"
+
+
 def get_rebalancing_flag(pct_change):
     """Determine rebalancing action based on percentage change."""
     if pct_change > 30:
@@ -146,13 +192,29 @@ def main():
         )
 
     with col3:
-        # Placeholder for statistical significance (will be implemented in Slice 11)
-        st.metric(
-            label="Statistical Significance",
-            value="Pending",
-            delta="p-value TBD",
-            help="Statistical significance of the observed changes (to be implemented)"
+        # Calculate statistical significance
+        p_value, is_significant, test_type = calculate_statistical_significance(
+            holiday_data['holiday_date'],
+            holiday_data['baseline_start_date'],
+            holiday_data['baseline_end_date']
         )
+
+        if test_type == "t_test":
+            sig_label = "Yes" if is_significant else "No"
+            sig_color = "normal" if is_significant else "inverse"
+            st.metric(
+                label="Statistical Significance",
+                value=sig_label,
+                delta=f"p = {p_value:.4f}",
+                help=f"T-test comparing holiday trip count vs baseline daily trip distribution: {'Significant' if is_significant else 'Not significant'} at α=0.05 level"
+            )
+        else:
+            st.metric(
+                label="Statistical Significance",
+                value="N/A",
+                delta="Insufficient data",
+                help="Not enough data points for statistical testing (minimum 30 required)"
+            )
 
     # Display baseline info
     st.markdown("---")
@@ -473,6 +535,77 @@ def main():
         )
     else:
         st.warning("No station data available for this holiday.")
+
+    # Section 6: Holiday Comparison Table
+    st.markdown("---")
+    st.subheader("📅 Compare All Holidays")
+
+    # Prepare comparison data
+    comparison_data = holiday_summary[[
+        'holiday_name',
+        'holiday_date',
+        'is_major',
+        'is_working_day',
+        'trips_pct_change',
+        'duration_pct_change',
+        'total_trips_holiday',
+        'baseline_days_count'
+    ]].copy()
+
+    # Format the data for display
+    comparison_data['holiday_date'] = pd.to_datetime(comparison_data['holiday_date']).dt.strftime('%Y-%m-%d')
+    comparison_data['is_major'] = comparison_data['is_major'].map({True: 'Yes', False: 'No'})
+    comparison_data['is_working_day'] = comparison_data['is_working_day'].map({True: 'Yes', False: 'No'})
+
+    # Rename columns for better display
+    comparison_data.columns = [
+        'Holiday Name',
+        'Date',
+        'Major Holiday',
+        'Working Day',
+        'Trips Change (%)',
+        'Duration Change (%)',
+        'Total Trips',
+        'Baseline Days'
+    ]
+
+    # Display sortable dataframe with column configuration
+    st.dataframe(
+        comparison_data,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Holiday Name": st.column_config.TextColumn("Holiday Name", width="medium"),
+            "Date": st.column_config.DateColumn("Date", format="YYYY-MM-DD"),
+            "Major Holiday": st.column_config.TextColumn("Major", width="small"),
+            "Working Day": st.column_config.TextColumn("Working", width="small"),
+            "Trips Change (%)": st.column_config.NumberColumn(
+                "Trips Change (%)",
+                format="%.1f%%",
+                help="Percentage change in total trips vs baseline"
+            ),
+            "Duration Change (%)": st.column_config.NumberColumn(
+                "Duration Change (%)",
+                format="%.1f%%",
+                help="Percentage change in average trip duration vs baseline"
+            ),
+            "Total Trips": st.column_config.NumberColumn(
+                "Total Trips",
+                format="%d",
+                help="Total trips on holiday"
+            ),
+            "Baseline Days": st.column_config.NumberColumn(
+                "Baseline Days",
+                format="%d",
+                help="Number of days used for baseline calculation"
+            )
+        }
+    )
+
+    st.caption(
+        "💡 **Interpretation:** Click column headers to sort. Compare holidays side-by-side to identify patterns. "
+        "Major holidays typically show larger negative changes due to reduced commuting."
+    )
 
     # Footer
     st.markdown("---")

@@ -159,18 +159,23 @@
   - [x] Format dataframes: percentage with %, trip counts with commas, add rebalancing action column
   - [x] **Verification:** Hourly chart shows Memorial Day 8am peak -71.5%, 5pm peak -83.1%, peak shifts from 19:00 baseline to 14:00 holiday. Top stations tables show Brooklyn residential in increased list, Manhattan business in decreased list
 
-- [ ] **Slice 11: Add Section 6 (Holiday Comparison Table) and Statistical Significance**
-  - [ ] Add st.markdown("---") and st.subheader("🎊 All Holidays Comparison")
-  - [ ] Create comparison dataframe: holiday_summary filtered to relevant columns (holiday_name, holiday_date, is_major, is_working_day, trips_pct_change, duration_pct_change)
-  - [ ] Sort by trips_pct_change
-  - [ ] Display with st.dataframe using column_config to format percentages: `st.column_config.NumberColumn("Trips Change (%)", format="%.1f%%")`
-  - [ ] Add imports: `from scipy import stats`
-  - [ ] Add statistical significance calculation in Section 1 (update KPI Card 3):
-    - Query individual trip data (not aggregated): holiday_trips = con.execute(f"SELECT ride_mins FROM stg_bike_trips WHERE ride_date = '{holiday_date}'").df()['ride_mins'].values
-    - Query baseline trips: baseline_trips using ride_date IN (baseline_dates_list)
-    - Calculate t-test: `t_stat, p_value = stats.ttest_ind(holiday_trips, baseline_trips)`
-    - Update metric: significance = "Yes" if p_value < 0.05 else "No", st.metric("Statistical Significance", significance, delta=f"p={p_value:.3f}")
-  - [ ] **Verification:** All 6 sections render correctly, holiday comparison table sortable, p-value calculates for each holiday, try selecting all 4 holidays to verify all data loads
+- [x] **Slice 11: Add Section 6 (Holiday Comparison Table) and Statistical Significance**
+  - [x] Add st.markdown("---") and st.subheader("📅 Compare All Holidays")
+  - [x] Create comparison dataframe: holiday_summary filtered to 8 columns (holiday_name, holiday_date, is_major, is_working_day, trips_pct_change, duration_pct_change, total_trips_holiday, baseline_days_count)
+  - [x] Format data: Convert dates to YYYY-MM-DD, map booleans to Yes/No
+  - [x] Display with st.dataframe using column_config to format all columns with proper NumberColumn format (%.1f%% for percentages, %d for counts), proper widths (small for Yes/No, medium for text), and help text
+  - [x] Add imports: `from scipy import stats`
+  - [x] Create calculate_statistical_significance() function with @st.cache_data(ttl=600):
+    - Query daily trip counts (not individual trips): holiday = single count, baseline = array of daily counts for baseline period
+    - Filter baseline to exclude weekends (dayofweek NOT IN (0,6)) and the holiday itself
+    - Check minimum 5 baseline days required
+    - Calculate one-sample t-test: `t_stat, p_value = stats.ttest_1samp(baseline_counts, holiday_count)` comparing holiday count against baseline distribution
+    - Return tuple: (p_value, is_significant, test_type)
+  - [x] Update KPI Card 3 in Section 1 to call calculate_statistical_significance():
+    - Display "Yes"/"No" for significance with p-value in delta (format: p = 0.0000)
+    - Handle edge cases: insufficient data (<5 baseline days) shows "N/A" with "Insufficient data" delta
+    - Add help text: "T-test comparing holiday trip count vs baseline daily trip distribution: Significant/Not significant at α=0.05 level"
+  - [x] **Verification:** All 6 sections render correctly, holiday comparison table sortable and displays 4 holidays with 8 columns, statistical significance calculates using trip counts (not duration), Streamlit runs from Home.py at http://localhost:8501 without errors
 
 - [ ] **Slice 12: Integration testing and documentation**
   - [ ] Run complete dbt build: `cd dbt && uv run dbt build --select +mart_holiday_impact*` and verify all models and tests pass
