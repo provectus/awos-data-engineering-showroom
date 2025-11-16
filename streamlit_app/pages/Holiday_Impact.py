@@ -41,6 +41,34 @@ def load_holiday_summary():
         return pd.DataFrame()
 
 
+@st.cache_data(ttl=600)
+def load_holiday_by_station(holiday_date):
+    """Load station-level holiday impact data for a specific holiday."""
+    con = get_db_connection()
+    query = """
+        SELECT *
+        FROM main_marts.mart_holiday_impact_by_station
+        WHERE holiday_date = ?
+        ORDER BY trips_pct_change DESC
+    """
+    try:
+        df = con.execute(query, [holiday_date]).df()
+        return df
+    except Exception as e:
+        st.error(f"Error loading station data: {e}")
+        return pd.DataFrame()
+
+
+def get_rebalancing_flag(pct_change):
+    """Determine rebalancing action based on percentage change."""
+    if pct_change > 30:
+        return 'Add bikes'
+    elif pct_change < -30:
+        return 'Remove bikes'
+    else:
+        return 'No action'
+
+
 def main():
     """Main Streamlit app for holiday impact analysis."""
     st.title("🎉 Holiday Impact Analysis")
@@ -186,6 +214,69 @@ def main():
         "💡 **Interpretation:** Blue bars (Holiday) vs light blue bars (Baseline). "
         "Shorter holiday bars indicate decreased demand, taller bars indicate increased demand."
     )
+
+    # Section 3: Station-Level Heatmap
+    st.markdown("---")
+    st.subheader("🗺️ Station-Level Demand Changes")
+
+    # Load station data
+    station_data = load_holiday_by_station(holiday_data['holiday_date'])
+
+    if not station_data.empty:
+        # Apply rebalancing flag
+        station_data['rebalancing_flag'] = station_data['trips_pct_change'].apply(get_rebalancing_flag)
+
+        # Create map
+        fig = px.scatter_mapbox(
+            station_data,
+            lat="latitude",
+            lon="longitude",
+            color="trips_pct_change",
+            size=abs(station_data["trips_abs_change"]),
+            color_continuous_scale=["red", "yellow", "green"],
+            color_continuous_midpoint=0,
+            hover_name="station_name",
+            hover_data={
+                "area": True,
+                "trips_pct_change": ":.1f",
+                "trips_holiday": ":,.0f",
+                "trips_baseline": ":.1f",
+                "rebalancing_flag": True,
+                "latitude": False,
+                "longitude": False
+            },
+            zoom=10,
+            center={"lat": 40.73, "lon": -73.94},
+            mapbox_style="open-street-map",
+            height=600,
+            title=f"Station Demand Changes: {selected_holiday}"
+        )
+
+        fig.update_layout(
+            coloraxis_colorbar=dict(
+                title="% Change",
+                ticksuffix="%"
+            )
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Add legend/interpretation
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("🔴 Red Stations", "Decreased Demand", "Remove bikes")
+        with col2:
+            st.metric("🟡 Yellow Stations", "Stable Demand", "No action")
+        with col3:
+            st.metric("🟢 Green Stations", "Increased Demand", "Add bikes")
+
+        st.caption(
+            "💡 **Interpretation:** Larger circles indicate bigger absolute changes. "
+            "Hover over stations to see details. Red stations need bike removal, "
+            "green stations need more bikes added."
+        )
+    else:
+        st.warning("No station data available for this holiday.")
 
     # Footer
     st.markdown("---")
