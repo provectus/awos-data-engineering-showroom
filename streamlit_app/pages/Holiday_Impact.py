@@ -118,6 +118,75 @@ def main():
         f"{'Non-Working Day' if not holiday_data['is_working_day'] else 'Working Day'}"
     )
 
+    # Section 2: Demand Comparison Chart
+    st.markdown("---")
+    st.subheader("📊 Demand Comparison: Holiday vs Baseline")
+
+    # Prepare data for the chart
+    categories = ['Total Trips', 'Avg Duration', 'Member Trips', 'Casual Trips']
+    baseline_values = [
+        holiday_data['total_trips_baseline'],
+        holiday_data['avg_duration_baseline'],
+        holiday_data['member_trips_baseline'],
+        holiday_data['casual_trips_baseline']
+    ]
+    holiday_values = [
+        holiday_data['total_trips_holiday'],
+        holiday_data['avg_duration_holiday'],
+        holiday_data['member_trips_holiday'],
+        holiday_data['casual_trips_holiday']
+    ]
+
+    # Create grouped bar chart
+    fig = go.Figure()
+
+    # Add baseline bars
+    fig.add_trace(go.Bar(
+        name='Baseline',
+        x=categories,
+        y=baseline_values,
+        marker_color='lightblue',
+        text=[f'{v:,.0f}' for v in baseline_values],
+        textposition='outside'
+    ))
+
+    # Add holiday bars
+    fig.add_trace(go.Bar(
+        name='Holiday',
+        x=categories,
+        y=holiday_values,
+        marker_color='darkblue',
+        text=[f'{v:,.0f}' for v in holiday_values],
+        textposition='outside'
+    ))
+
+    # Update layout
+    fig.update_layout(
+        barmode='group',
+        height=400,
+        title=f"{selected_holiday}: Demand Metrics Comparison",
+        yaxis_title="Count / Duration (mins)",
+        xaxis_title="Metric",
+        hovermode='x unified',
+        showlegend=True,
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="right",
+            x=1
+        )
+    )
+
+    # Display chart
+    st.plotly_chart(fig, use_container_width=True)
+
+    # Add interpretation
+    st.caption(
+        "💡 **Interpretation:** Blue bars (Holiday) vs light blue bars (Baseline). "
+        "Shorter holiday bars indicate decreased demand, taller bars indicate increased demand."
+    )
+
     # Footer
     st.markdown("---")
     st.markdown(

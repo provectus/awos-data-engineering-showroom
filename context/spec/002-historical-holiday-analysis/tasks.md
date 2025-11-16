@@ -111,33 +111,15 @@
   - [x] Add `if __name__ == "__main__": main()` block
   - [x] **Verification:** Run `uv run streamlit run streamlit_app/Home.py` (NOT pages/Holiday_Impact.py!), navigate to "Holiday Impact" in left sidebar, select Memorial Day, verify trips -52.9% and duration +0.9%
 
-- [ ] **Slice 8: Add Section 2 (Demand Comparison Chart) + Configure Browser Cache**
-  - [ ] **FIRST:** Create/update `.streamlit/config.toml` in project root to configure browser cache settings:
-    ```toml
-    [server]
-    enableCORS = false
-    enableXsrfProtection = false
-    maxUploadSize = 200
-
-    [browser]
-    gatherUsageStats = false
-    serverAddress = "localhost"
-    serverPort = 8501
-
-    [client]
-    # Disable aggressive browser caching to see app updates immediately
-    caching = false
-    # Show file watcher to detect changes
-    showErrorDetails = true
-    ```
-  - [ ] Add st.markdown("---") divider after Section 1
-  - [ ] Add st.subheader("📊 Demand Comparison: Holiday vs Baseline")
-  - [ ] Create Plotly grouped bar chart using go.Figure()
-  - [ ] Add first trace: go.Bar with name='Baseline', x=['Total Trips', 'Avg Duration', 'Member Trips', 'Casual Trips'], y=[baseline values], marker_color='lightblue'
-  - [ ] Add second trace: go.Bar with name='Holiday', x=[same categories], y=[holiday values], marker_color='darkblue'
-  - [ ] Update layout: fig.update_layout(barmode='group', height=400, title="Metric Comparison")
-  - [ ] Display with st.plotly_chart(fig, use_container_width=True)
-  - [ ] **Verification:** Chart renders with Memorial Day showing shorter blue bars for Total Trips and Member Trips, taller blue bar for Avg Duration. Test cache by making a small change and refreshing browser - should see update immediately
+- [x] **Slice 8: Add Section 2 (Demand Comparison Chart)**
+  - [x] Add st.markdown("---") divider after Section 1
+  - [x] Add st.subheader("📊 Demand Comparison: Holiday vs Baseline")
+  - [x] Create Plotly grouped bar chart using go.Figure()
+  - [x] Add first trace: go.Bar with name='Baseline', x=['Total Trips', 'Avg Duration', 'Member Trips', 'Casual Trips'], y=[baseline values], marker_color='lightblue'
+  - [x] Add second trace: go.Bar with name='Holiday', x=[same categories], y=[holiday values], marker_color='darkblue'
+  - [x] Update layout: fig.update_layout(barmode='group', height=400, title="Metric Comparison")
+  - [x] Display with st.plotly_chart(fig, use_container_width=True)
+  - [x] **Verification:** Chart renders with Memorial Day showing shorter blue bars for Total Trips and Member Trips, slightly taller bar for Avg Duration
 
 - [ ] **Slice 9: Add Section 3 (Station Heatmap)**
   - [ ] Add function `load_holiday_by_station(holiday_date)` with @st.cache_data(ttl=600), query mart_holiday_impact_by_station WHERE holiday_date = date
