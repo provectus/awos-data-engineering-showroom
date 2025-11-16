@@ -1,8 +1,9 @@
 # Technical Specification: Historical Holiday Analysis
 
-- **Functional Specification:** `context/spec/002-historical-holiday-analysis/functional-spec.md`
-- **Status:** Draft
+- **Functional Specification:** `context/spec/002-historical-holiday-analysis/functional-spec-lite.md`
+- **Status:** ✅ Completed
 - **Author(s):** Engineering Team
+- **Implementation:** All 12 vertical slices completed (38/38 tests passing)
 
 ---
 
@@ -171,9 +172,19 @@ def load_holiday_summary():
 **Section 2: Demand Comparison Chart**
 - Grouped bar chart (Plotly) comparing holiday vs baseline for: Total Trips, Avg Duration, Member Trips, Casual Trips
 
-**Section 3: Station-Level Heatmap**
-- Plotly Scattermapbox with stations color-coded by `trips_pct_change`
-- Color scale: Red (< -30%) → Yellow (-30% to +30%) → Green (> +30%)
+**Section 3: Neighborhood-Level Demand Map (K-Means Clustering)** ✅ Implemented
+- User-adjustable slider for cluster count (10-50, default 30, step 5)
+- K-Means clustering aggregates 2,000+ stations into neighborhoods:
+```python
+from sklearn.cluster import KMeans
+kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)
+station_data['cluster'] = kmeans.fit_predict(coords)
+```
+- Cluster aggregation: sum trips, mean lat/lon, count stations, mode area
+- Plotly Scattermapbox with clusters color-coded by `trips_pct_change`
+- Color scale: Red (decreased) → Yellow (stable) → Green (increased), midpoint=0
+- Circle size represents absolute change magnitude
+- Hover data: area, trips_pct_change, trips_holiday, trips_baseline, rebalancing_flag, station_count
 - Rebalancing flags calculated in Python:
 ```python
 def get_rebalancing_flag(pct_change):
@@ -220,29 +231,38 @@ WITH baseline_days AS (
 
 ---
 
-#### Statistical Significance Testing
+#### Statistical Significance Testing ✅ Implemented
 
-Performed in Streamlit using scipy:
+Performed in Streamlit using scipy (one-sample t-test comparing holiday trip count vs baseline daily trip distribution):
 ```python
 from scipy import stats
 
-# Query individual trip data (not aggregated)
-holiday_trips = con.execute(f"""
-    SELECT ride_mins FROM stg_bike_trips WHERE ride_date = '{holiday_date}'
-""").df()['ride_mins'].values
+# Query daily trip counts (NOT individual trips)
+holiday_count = con.execute("""
+    SELECT COUNT(*) as trip_count
+    FROM main_staging.stg_bike_trips
+    WHERE ride_date = ?
+""", [holiday_date]).df()['trip_count'].values[0]
 
-baseline_trips = con.execute(f"""
-    SELECT ride_mins FROM stg_bike_trips
-    WHERE ride_date IN ({baseline_dates_list})
-""").df()['ride_mins'].values
+baseline_counts = con.execute("""
+    SELECT ride_date, COUNT(*) as trip_count
+    FROM main_staging.stg_bike_trips
+    WHERE ride_date BETWEEN ? AND ?
+      AND ride_date != ?
+      AND dayofweek(ride_date) NOT IN (0, 6)
+    GROUP BY ride_date
+""", [baseline_start, baseline_end, holiday_date]).df()['trip_count'].values
 
-# Independent samples t-test
-t_stat, p_value = stats.ttest_ind(holiday_trips, baseline_trips)
+# One-sample t-test: compare holiday count against baseline distribution
+t_stat, p_value = stats.ttest_1samp(baseline_counts, holiday_count)
 
 # Display
 significance = "Yes" if p_value < 0.05 else "No"
-st.metric("Statistical Significance", significance, delta=f"p={p_value:.3f}")
+st.metric("Statistical Significance", significance, delta=f"p = {p_value:.4f}",
+          help="T-test comparing holiday trip count vs baseline daily trip distribution")
 ```
+
+**Why one-sample t-test?** We're comparing a single holiday observation against a distribution of baseline daily counts (not comparing two independent samples).
 
 ---
 

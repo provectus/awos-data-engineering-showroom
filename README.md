@@ -12,6 +12,7 @@ A data platform showcasing modern data stack with incremental value from adding 
 - [Running the Pipeline](#running-the-pipeline)
 - [Demo Walkthrough](#demo-walkthrough)
 - [Holiday Data Integration](#-holiday-data-integration)
+- [🎉 Historical Holiday Analysis (NEW)](#-historical-holiday-analysis-new)
 - [Development](#development)
 - [Testing](#testing)
 - [Data Sources](#-data-sources)
@@ -33,12 +34,19 @@ This project demonstrates a complete data pipeline that:
 - Enables correlation and what-if analysis
 - Demonstrates incremental value of new data sources
 
-**Part 3 - Holiday Impact Analysis (+ Holiday Data)**
+**Part 3 - Holiday Data Integration (+ Holiday Data)** ✅ Spec 001 Completed
 - Integrates US public holiday data from Nager.Date API
 - Adds NYC-specific local holidays (NYC Marathon, Puerto Rican Day Parade)
 - Classifies holidays as major/federal vs optional/local
 - Identifies working vs non-working days for demand analysis
-- Enables holiday impact analysis on bike demand patterns
+
+**Part 4 - Historical Holiday Analysis (🆕 NEW)** ✅ Spec 002 Completed
+- Analyzes historical bike demand around holidays vs regular weekdays
+- 4 new dbt mart models (summary, by-station, by-hour, by-area)
+- Interactive dashboard with 6 comprehensive analysis sections
+- K-Means clustering for neighborhood-level demand visualization (10-50 adjustable clusters)
+- Statistical significance testing (t-test p-values)
+- Rebalancing recommendations for operations teams
 
 ### Key Features
 
@@ -149,15 +157,20 @@ weather-bike-demo/
 │       │   ├── stg_weather.sql
 │       │   └── stg_holidays.sql
 │       ├── core/                    # Business logic
-│       │   ├── dim_stations.sql
+│       │   ├── dim_stations.sql     # 🆕 Enhanced with lat/lon + 10 geographic areas
 │       │   └── fct_trips_daily.sql
 │       └── marts/                   # Analytics-ready tables
 │           ├── mart_demand_daily.sql
-│           └── mart_weather_effect.sql
+│           ├── mart_weather_effect.sql
+│           ├── 🆕 mart_holiday_impact_summary.sql       # Citywide holiday impact (4 rows)
+│           ├── 🆕 mart_holiday_impact_by_station.sql    # Station-level (8,370 rows)
+│           ├── 🆕 mart_holiday_impact_by_hour.sql       # Hourly patterns (96 rows)
+│           └── 🆕 mart_holiday_impact_by_area.sql       # Geographic areas (36 rows)
 ├── streamlit_app/
 │   ├── Home.py                      # Main dashboard
 │   └── pages/
-│       └── Weather.py               # Weather impact page
+│       ├── Weather.py               # Weather impact page
+│       └── 🆕 Holiday_Impact.py     # Historical holiday analysis (6 sections)
 ├── notebooks/
 │   └── polars_eda.ipynb             # Exploratory analysis
 ├── tests/
