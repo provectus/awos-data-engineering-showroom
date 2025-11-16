@@ -62,6 +62,24 @@ def load_holiday_by_station(holiday_date):
         return pd.DataFrame()
 
 
+@st.cache_data(ttl=600)
+def load_holiday_by_hour(holiday_date):
+    """Load hourly holiday impact data for a specific holiday."""
+    con = get_db_connection()
+    query = """
+        SELECT *
+        FROM main_marts.mart_holiday_impact_by_hour
+        WHERE holiday_date = ?
+        ORDER BY hour_of_day
+    """
+    try:
+        df = con.execute(query, [holiday_date]).df()
+        return df
+    except Exception as e:
+        st.error(f"Error loading hourly data: {e}")
+        return pd.DataFrame()
+
+
 def get_rebalancing_flag(pct_change):
     """Determine rebalancing action based on percentage change."""
     if pct_change > 30:
@@ -309,6 +327,149 @@ def main():
             f"💡 **Interpretation:** Map shows {n_clusters} neighborhood clusters aggregated from {len(station_data)} stations. "
             "Larger circles indicate bigger absolute changes. Hover to see cluster details including number of stations. "
             "Adjust slider above to show more or fewer neighborhoods."
+        )
+    else:
+        st.warning("No station data available for this holiday.")
+
+    # Section 4: Hourly Demand Pattern
+    st.markdown("---")
+    st.subheader("⏰ Hourly Demand Patterns")
+
+    # Load hourly data
+    hourly_data = load_holiday_by_hour(holiday_data['holiday_date'])
+
+    if not hourly_data.empty:
+        # Create line chart
+        fig = go.Figure()
+
+        # Add baseline line
+        fig.add_trace(go.Scatter(
+            x=hourly_data['hour_of_day'],
+            y=hourly_data['trips_baseline'],
+            mode='lines+markers',
+            name='Baseline',
+            line=dict(color='lightblue', width=3),
+            marker=dict(size=6)
+        ))
+
+        # Add holiday line
+        fig.add_trace(go.Scatter(
+            x=hourly_data['hour_of_day'],
+            y=hourly_data['trips_holiday'],
+            mode='lines+markers',
+            name='Holiday',
+            line=dict(color='darkblue', width=3),
+            marker=dict(size=6)
+        ))
+
+        # Update layout
+        fig.update_layout(
+            title=f"24-Hour Demand Pattern: {selected_holiday}",
+            xaxis_title="Hour of Day",
+            yaxis_title="Number of Trips",
+            hovermode='x unified',
+            height=400,
+            xaxis=dict(
+                tickmode='linear',
+                tick0=0,
+                dtick=2,
+                range=[-0.5, 23.5]
+            ),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1
+            )
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Find peak hours
+        baseline_peak = hourly_data.loc[hourly_data['trips_baseline'].idxmax()]
+        holiday_peak = hourly_data.loc[hourly_data['trips_holiday'].idxmax()]
+
+        # Display peak hour insights
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric(
+                "Baseline Peak Hour",
+                f"{int(baseline_peak['hour_of_day'])}:00",
+                f"{int(baseline_peak['trips_baseline']):,} trips"
+            )
+        with col2:
+            st.metric(
+                "Holiday Peak Hour",
+                f"{int(holiday_peak['hour_of_day'])}:00",
+                f"{int(holiday_peak['trips_holiday']):,} trips"
+            )
+
+        st.caption(
+            "💡 **Interpretation:** Blue line (Holiday) vs light blue line (Baseline). "
+            "Look for shifts in peak hours - commute peaks (8am, 5pm) often disappear on holidays, "
+            "replaced by midday leisure peaks."
+        )
+    else:
+        st.warning("No hourly data available for this holiday.")
+
+    # Section 5: Top Stations Ranking
+    st.markdown("---")
+    st.subheader("🏆 Top Stations by Demand Change")
+
+    # Load station data (reuse from Section 3)
+    station_data = load_holiday_by_station(holiday_data['holiday_date'])
+
+    if not station_data.empty:
+        # Add rebalancing flags
+        station_data['rebalancing_flag'] = station_data['trips_pct_change'].apply(get_rebalancing_flag)
+
+        # Create two columns for top increased/decreased
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("#### 📈 Top 10 - Increased Demand")
+            top_increase = station_data.nlargest(10, 'trips_pct_change')[
+                ['station_name', 'area', 'trips_pct_change', 'trips_holiday', 'trips_baseline', 'rebalancing_flag']
+            ].copy()
+
+            # Format percentage column
+            top_increase['trips_pct_change'] = top_increase['trips_pct_change'].apply(lambda x: f"{x:.1f}%")
+            top_increase['trips_holiday'] = top_increase['trips_holiday'].apply(lambda x: f"{int(x):,}")
+            top_increase['trips_baseline'] = top_increase['trips_baseline'].apply(lambda x: f"{x:.1f}")
+
+            # Rename columns for display
+            top_increase.columns = ['Station', 'Area', '% Change', 'Holiday Trips', 'Baseline Trips', 'Action']
+
+            st.dataframe(
+                top_increase,
+                use_container_width=True,
+                hide_index=True
+            )
+
+        with col2:
+            st.markdown("#### 📉 Top 10 - Decreased Demand")
+            top_decrease = station_data.nsmallest(10, 'trips_pct_change')[
+                ['station_name', 'area', 'trips_pct_change', 'trips_holiday', 'trips_baseline', 'rebalancing_flag']
+            ].copy()
+
+            # Format percentage column
+            top_decrease['trips_pct_change'] = top_decrease['trips_pct_change'].apply(lambda x: f"{x:.1f}%")
+            top_decrease['trips_holiday'] = top_decrease['trips_holiday'].apply(lambda x: f"{int(x):,}")
+            top_decrease['trips_baseline'] = top_decrease['trips_baseline'].apply(lambda x: f"{x:.1f}")
+
+            # Rename columns for display
+            top_decrease.columns = ['Station', 'Area', '% Change', 'Holiday Trips', 'Baseline Trips', 'Action']
+
+            st.dataframe(
+                top_decrease,
+                use_container_width=True,
+                hide_index=True
+            )
+
+        st.caption(
+            "💡 **Interpretation:** These tables show the 10 stations with the biggest increases and decreases. "
+            "Use the 'Action' column to prioritize bike rebalancing operations."
         )
     else:
         st.warning("No station data available for this holiday.")

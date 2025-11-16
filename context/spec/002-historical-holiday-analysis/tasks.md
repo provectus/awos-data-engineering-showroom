@@ -141,21 +141,23 @@
   - [x] Install scikit-learn: `uv add scikit-learn`
   - [x] **Verification:** Map shows 30 clusters (default) instead of 2,000+ stations, slider adjusts granularity 10-50, Financial District shows red clusters on Memorial Day, tooltip shows station count per cluster
 
-- [ ] **Slice 10: Add Section 4 (Hourly Pattern) and Section 5 (Top Stations)**
-  - [ ] Add function `load_holiday_by_hour(holiday_date)` with @st.cache_data(ttl=600), query mart_holiday_impact_by_hour WHERE holiday_date = date
-  - [ ] Add st.markdown("---") and st.subheader("⏰ Hourly Demand Patterns")
-  - [ ] Load hourly data: `hourly_data = load_holiday_by_hour(holiday_data['holiday_date'])`
-  - [ ] Create Plotly line chart using go.Figure()
-  - [ ] Add baseline trace: go.Scatter with x=hour_of_day, y=trips_baseline, mode='lines+markers', name='Baseline', line color lightblue
-  - [ ] Add holiday trace: go.Scatter with x=hour_of_day, y=trips_holiday, mode='lines+markers', name='Holiday', line color darkblue
-  - [ ] Update axes: fig.update_xaxes(title="Hour of Day", dtick=2), fig.update_yaxes(title="Number of Trips")
-  - [ ] Update layout: hovermode='x unified', height=400
-  - [ ] Display with st.plotly_chart(fig, use_container_width=True)
-  - [ ] Add st.markdown("---") and st.subheader("🏆 Top Stations by Demand Change")
-  - [ ] Create two columns: col1, col2 = st.columns(2)
-  - [ ] In col1: st.subheader("📈 Top 10 - Increased Demand"), display top_increase = station_data.nlargest(10, 'trips_pct_change') with st.dataframe
-  - [ ] In col2: st.subheader("📉 Top 10 - Decreased Demand"), display top_decrease = station_data.nsmallest(10, 'trips_pct_change') with st.dataframe
-  - [ ] **Verification:** Hourly chart shows Memorial Day 8am peak disappearing (baseline high, holiday low), station tables show Financial District in decreased list, parks in increased list
+- [x] **Slice 10: Add Section 4 (Hourly Pattern) and Section 5 (Top Stations)**
+  - [x] Add function `load_holiday_by_hour(holiday_date)` with @st.cache_data(ttl=600), query mart_holiday_impact_by_hour WHERE holiday_date = date
+  - [x] Add st.markdown("---") and st.subheader("⏰ Hourly Demand Patterns")
+  - [x] Load hourly data: `hourly_data = load_holiday_by_hour(holiday_data['holiday_date'])`
+  - [x] Create Plotly line chart using go.Figure()
+  - [x] Add baseline trace: go.Scatter with x=hour_of_day, y=trips_baseline, mode='lines+markers', name='Baseline', line color lightblue
+  - [x] Add holiday trace: go.Scatter with x=hour_of_day, y=trips_holiday, mode='lines+markers', name='Holiday', line color darkblue
+  - [x] Update axes: fig.update_xaxes(title="Hour of Day", dtick=2), fig.update_yaxes(title="Number of Trips")
+  - [x] Update layout: hovermode='x unified', height=400
+  - [x] Display with st.plotly_chart(fig, use_container_width=True)
+  - [x] Add peak hour metrics showing baseline vs holiday peak times
+  - [x] Add st.markdown("---") and st.subheader("🏆 Top Stations by Demand Change")
+  - [x] Create two columns: col1, col2 = st.columns(2)
+  - [x] In col1: st.markdown("📈 Top 10 - Increased Demand"), display top_increase = station_data.nlargest(10, 'trips_pct_change') with formatted dataframe
+  - [x] In col2: st.markdown("📉 Top 10 - Decreased Demand"), display top_decrease = station_data.nsmallest(10, 'trips_pct_change') with formatted dataframe
+  - [x] Format dataframes: percentage with %, trip counts with commas, add rebalancing action column
+  - [x] **Verification:** Hourly chart shows Memorial Day 8am peak -71.5%, 5pm peak -83.1%, peak shifts from 19:00 baseline to 14:00 holiday. Top stations tables show Brooklyn residential in increased list, Manhattan business in decreased list
 
 - [ ] **Slice 11: Add Section 6 (Holiday Comparison Table) and Statistical Significance**
   - [ ] Add st.markdown("---") and st.subheader("🎊 All Holidays Comparison")
