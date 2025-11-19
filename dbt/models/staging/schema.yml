@@ -20,6 +20,22 @@ sources:
           - name: holiday_types
             description: "Comma-separated list of holiday types (Public, Federal, etc.)"
 
+  - name: raw_games
+    description: "Raw MLB game data ingested from MLB Stats API"
+    schema: raw_games
+    tables:
+      - name: mlb_games
+        description: "NY Yankees and NY Mets home game schedules"
+        columns:
+          - name: game_id
+            description: "Unique game identifier (MLB gamePk)"
+          - name: game_date
+            description: "Game date (YYYY-MM-DD)"
+          - name: game_datetime
+            description: "Game start datetime (UTC)"
+          - name: venue_name
+            description: "Stadium name"
+
 models:
   - name: stg_bike_trips
     description: "Cleaned and normalized bike trip data from raw ingestion"
@@ -123,3 +139,44 @@ models:
 
       - name: holiday_types
         description: "Comma-separated list of holiday types (Public, Federal, Optional, etc.)"
+
+  - name: stg_games
+    description: "Cleaned and enriched MLB game data for NY Yankees and NY Mets home games"
+    columns:
+      - name: game_id
+        description: "Unique game identifier (MLB gamePk)"
+        tests:
+          - unique
+          - not_null
+
+      - name: game_date
+        description: "Game date (date type)"
+        tests:
+          - not_null
+
+      - name: game_datetime
+        description: "Game start datetime (timestamp type)"
+        tests:
+          - not_null
+
+      - name: stadium_name
+        description: "Standardized stadium name"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Yankee Stadium', 'Citi Field']
+
+      - name: is_yankees_home
+        description: "Boolean flag for Yankees home games"
+        tests:
+          - not_null
+
+      - name: is_mets_home
+        description: "Boolean flag for Mets home games"
+        tests:
+          - not_null
+
+      - name: estimated_end_datetime
+        description: "Estimated game end time (game_datetime + 3 hours)"
+        tests:
+          - not_null

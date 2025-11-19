@@ -1,11 +1,12 @@
-"""Airflow DAG for bike and weather data pipeline.
+"""Airflow DAG for bike, weather, and game data pipeline.
 
 This DAG orchestrates the complete data pipeline:
 1. Ingest bike trip data (dlt)
 2. Ingest weather data (dlt)
-3. Validate bike data (Great Expectations)
-4. Validate weather data (Great Expectations)
-5. Transform data (dbt)
+3. Ingest MLB game data (dlt)
+4. Validate bike data (Great Expectations)
+5. Validate weather data (Great Expectations)
+6. Transform data (dbt)
 """
 
 import sys
@@ -23,6 +24,7 @@ sys.path.insert(0, str(project_root))
 
 from dlt_pipeline.bike import run_bike_pipeline  # noqa: E402
 from dlt_pipeline.weather import run_weather_pipeline  # noqa: E402
+from dlt_pipeline.games import run_game_pipeline  # noqa: E402
 
 
 # Default arguments for all tasks
@@ -81,9 +83,26 @@ with DAG(
         result = run_weather_pipeline(lat, lon, start_date, end_date)
         return str(result)
 
+    @task(
+        doc_md="""
+        ## Ingest MLB Game Data
+
+        Fetches NY Yankees and NY Mets home game schedules from MLB Stats API.
+        Used to analyze bike demand patterns on game days vs non-game days.
+        """
+    )
+    def ingest_game_data() -> str:
+        """Task to ingest MLB game data using dlt."""
+        start_date = "2024-05-01"
+        end_date = "2024-06-30"
+
+        result = run_game_pipeline(start_date, end_date)
+        return str(result)
+
     # Task definitions
     ingest_bike = ingest_bike_data()
     ingest_weather = ingest_weather_data()
+    ingest_games = ingest_game_data()
 
     dbt_deps = BashOperator(
         task_id="dbt_deps",
@@ -119,4 +138,4 @@ with DAG(
     )
 
     # Pipeline dependencies
-    [ingest_bike, ingest_weather] >> dbt_deps >> dbt_build >> dbt_docs_generate
+    [ingest_bike, ingest_weather, ingest_games] >> dbt_deps >> dbt_build >> dbt_docs_generate
