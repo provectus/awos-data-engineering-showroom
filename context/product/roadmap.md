@@ -12,12 +12,12 @@ _Build the core data infrastructure for holiday and event analysis._
   - [x] **Holiday Calendar Ingestion:** Import US federal and local NYC holidays into the data warehouse
   - [x] **Historical Holiday Analysis:** Correlate past holidays with bike demand patterns to identify trends
 
-- [ ] **Special Events Data Integration**
-  - [ ] **Large Event API Connection:** Connect to public event calendars focusing on high-attendance events (concerts, sports, parades, festivals) with 5,000+ participants
-  - [ ] **Event Participant Estimation:** Capture or estimate attendance numbers for each event to classify impact size
-  - [ ] **Event Classification System:** Categorize events by size - Small (5,000-15,000), Medium (15,001-30,000), Large (30,001+)
-  - [ ] **Station Proximity Mapping:** Identify which Citi Bike stations are within walking distance of each event venue
-  - [ ] **Historical Event Impact Database:** Build database of past large events with their participant counts and measured demand impact on nearby stations
+- [ ] **Baseball Match Impact Analysis**
+  - [ ] **MLB Game Data Ingestion:** Ingest NY Yankees and NY Mets home game schedules from MLB public API
+  - [ ] **Stadium Proximity Analysis:** Identify Citi Bike stations near Yankee Stadium (Bronx) and Citi Field (Queens)
+  - [ ] **Game Day Demand Patterns:** Analyze bike trip patterns on game days vs non-game days at stadium-adjacent stations
+  - [ ] **Pre/Post Game Rush Analysis:** Identify demand spikes before game start times and after typical game end times
+  - [ ] **Game Impact Dashboard:** Visualize historical game day effects and upcoming game schedule with predicted station demand
 
 - [ ] **Pipeline Orchestration Enhancement**
   - [ ] **Airflow DAG Integration:** Integrate holiday ingestion pipeline into Airflow orchestration workflow
