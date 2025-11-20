@@ -366,3 +366,43 @@ models:
         description: "Text recommendation for rebalancing"
         tests:
           - not_null
+
+  - name: mart_baseline_net_flow
+    description: "Historical baseline net flow by cluster, day-of-week, and hour for demand forecasting"
+    columns:
+      - name: cluster_id
+        description: "Cluster identifier (0-29)"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_station_clusters')
+              field: cluster_id
+
+      - name: day_of_week
+        description: "Day of week (0=Sunday, 6=Saturday)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1, 2, 3, 4, 5, 6]
+
+      - name: hour
+        description: "Hour of day (0-23)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+
+      - name: trips_started
+        description: "Total trips started (bikes leaving cluster)"
+        tests:
+          - not_null
+
+      - name: trips_ended
+        description: "Total trips ended (bikes arriving to cluster)"
+        tests:
+          - not_null
+
+      - name: net_flow
+        description: "Net flow (trips_ended - trips_started). Negative = add bikes, Positive = remove bikes"
+        tests:
+          - not_null

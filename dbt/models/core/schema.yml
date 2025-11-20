@@ -131,3 +131,43 @@ models:
           - accepted_values:
               values: [true, false]
 
+  - name: dim_station_clusters
+    description: "K-means cluster assignments for bike stations (k=30)"
+    columns:
+      - name: station_id
+        description: "Unique station identifier"
+        tests:
+          - unique
+          - not_null
+
+      - name: station_name
+        description: "Name of the station"
+
+      - name: latitude
+        description: "Station latitude coordinate (WGS84)"
+
+      - name: longitude
+        description: "Station longitude coordinate (WGS84)"
+
+      - name: cluster_id
+        description: "K-means cluster assignment (0-29)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 29
+
+      - name: centroid_lat
+        description: "Latitude of cluster centroid"
+
+      - name: centroid_lon
+        description: "Longitude of cluster centroid"
+
+      - name: distance_from_centroid_km
+        description: "Distance from station to its cluster centroid in kilometers"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 5
+
