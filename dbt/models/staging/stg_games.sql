@@ -26,11 +26,17 @@ with source_games as (
 
 select
     game_id,
-    game_date::date as game_date,
-    game_datetime::timestamp as game_datetime,
-    extract(hour from game_datetime::timestamp) as game_hour,
-    game_datetime::timestamp::time as game_time,
-    official_date,
+
+    -- Use only game_datetime as source of truth, rounded to nearest hour
+    date_trunc('hour', game_datetime::timestamp + interval '30 minutes') as game_datetime_rounded,
+    game_datetime::timestamp as game_datetime_original,
+
+    -- Derive game_date from rounded datetime (not from raw game_date field)
+    date_trunc('hour', game_datetime::timestamp + interval '30 minutes')::date as game_date,
+
+    extract(hour from date_trunc('hour', game_datetime::timestamp + interval '30 minutes')) as game_hour,
+    date_trunc('hour', game_datetime::timestamp + interval '30 minutes')::time as game_time,
+
     season,
     game_type,
     game_status,
@@ -45,8 +51,8 @@ select
     venue_id,
     venue_name,
 
-    -- Derived fields
-    game_datetime::timestamp + interval '3 hours' as estimated_end_datetime,
+    -- Derived fields (use rounded datetime)
+    date_trunc('hour', game_datetime::timestamp + interval '30 minutes') + interval '3 hours' as estimated_end_datetime,
 
     case when home_team_id = 147 then true else false end as is_yankees_home,
     case when home_team_id = 121 then true else false end as is_mets_home,

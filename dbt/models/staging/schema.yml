@@ -150,12 +150,17 @@ models:
           - not_null
 
       - name: game_date
-        description: "Game date (date type)"
+        description: "Game date (derived from rounded game_datetime)"
         tests:
           - not_null
 
-      - name: game_datetime
-        description: "Game start datetime (timestamp type)"
+      - name: game_datetime_rounded
+        description: "Game start datetime rounded to nearest hour (timestamp type)"
+        tests:
+          - not_null
+
+      - name: game_datetime_original
+        description: "Original game start datetime from API (timestamp type)"
         tests:
           - not_null
 

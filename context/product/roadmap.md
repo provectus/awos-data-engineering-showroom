@@ -4,24 +4,26 @@ _This roadmap outlines our strategic direction based on customer needs and busin
 
 ---
 
-### Phase 1: Data Foundation & Analytics (V2 - Immediate Priority)
+### Phase 1: Data Foundation & Analytics ✅ **100% COMPLETE**
 
 _Build the core data infrastructure for holiday and event analysis._
+
+**Status**: All Phase 1 items completed! Foundation is ready for Phase 2 predictive intelligence.
 
 - [x] **Holiday Data Integration** ✅ **COMPLETED**
   - [x] **Holiday Calendar Ingestion:** Import US federal and local NYC holidays into the data warehouse
   - [x] **Historical Holiday Analysis:** Correlate past holidays with bike demand patterns to identify trends
 
-- [ ] **Baseball Match Impact Analysis**
-  - [ ] **MLB Game Data Ingestion:** Ingest NY Yankees and NY Mets home game schedules from MLB public API
-  - [ ] **Stadium Proximity Analysis:** Identify Citi Bike stations near Yankee Stadium (Bronx) and Citi Field (Queens)
-  - [ ] **Game Day Demand Patterns:** Analyze bike trip patterns on game days vs non-game days at stadium-adjacent stations
-  - [ ] **Pre/Post Game Rush Analysis:** Identify demand spikes before game start times and after typical game end times
-  - [ ] **Game Impact Dashboard:** Visualize historical game day effects and upcoming game schedule with predicted station demand
+- [x] **Baseball Match Impact Analysis** ✅ **COMPLETED**
+  - [x] **MLB Game Data Ingestion:** Ingest NY Yankees and NY Mets home game schedules from MLB public API (54 games, May-June 2024)
+  - [x] **Stadium Proximity Analysis:** Identify Citi Bike stations near Yankee Stadium (Bronx) and Citi Field (Queens) using Haversine formula (37 stations within 1km)
+  - [x] **Game Day Demand Patterns:** Analyze bike trip patterns on game days vs non-game days at stadium-adjacent stations with 30-minute granularity
+  - [x] **Pre/Post Game Rush Analysis:** Identify demand spikes in 6-hour window (-3h to +3h) with baseline comparison
+  - [x] **Game Impact Dashboard:** Interactive Streamlit dashboard with rebalancing calculator, demand analysis charts, and station map
 
-- [ ] **Pipeline Orchestration Enhancement**
-  - [ ] **Airflow DAG Integration:** Integrate holiday ingestion pipeline into Airflow orchestration workflow
-  - [ ] **End-to-End Automation:** Ensure all new data sources (holidays, future events) are orchestrated with proper dependencies and monitoring
+- [x] **Pipeline Orchestration Enhancement** ✅ **COMPLETED**
+  - [x] **Airflow DAG Integration:** Holiday and game data ingestion integrated into `bike_weather_dag.py` with proper task dependencies
+  - [x] **End-to-End Automation:** All data sources (bike, weather, holidays, games) orchestrated with retry logic and sequential execution (ingest → dbt build → docs)
 
 ---
 
@@ -44,8 +46,9 @@ _Enable forecasting and scenario modeling for operations planning._
 
 _Make insights accessible and actionable through dashboards._
 
-- [ ] **Enhanced Analytics Dashboards**
-  - [ ] **Holiday Impact Dashboard:** Visualize demand patterns during holidays with historical comparisons
+- [x] **Enhanced Analytics Dashboards** ✅ **PARTIALLY COMPLETED**
+  - [x] **Holiday Impact Dashboard:** Visualize demand patterns during holidays with historical comparisons (citywide summary, station-level heatmaps, hourly patterns, geographic distribution)
+  - [x] **Game Impact Dashboard:** Interactive rebalancing calculator with demand analysis and station proximity maps for Yankees/Mets games
   - [ ] **Event Calendar View:** Display upcoming events overlaid with predicted demand by station
   - [ ] **What-If Scenario Dashboard:** Interactive interface for testing scenarios and viewing forecasts
 

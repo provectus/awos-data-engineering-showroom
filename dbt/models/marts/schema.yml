@@ -311,3 +311,58 @@ models:
           combination_of_columns:
             - holiday_date
             - area_name
+
+  - name: mart_game_day_demand
+    description: "Game day bike demand analysis comparing game days vs baseline"
+    columns:
+      - name: game_id
+        description: "Unique game identifier"
+        tests:
+          - not_null
+
+      - name: station_id
+        description: "Station identifier"
+        tests:
+          - not_null
+
+      - name: hour_offset
+        description: "Hour relative to game start (-3 to +3)"
+        tests:
+          - not_null
+
+      - name: trips_started_game_day
+        description: "Trips started on game day"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+      - name: trips_ended_game_day
+        description: "Trips ended on game day"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: mart_game_rebalancing
+    description: "Rebalancing recommendations for game days based on demand patterns"
+    columns:
+      - name: stadium_name
+        description: "Stadium name"
+        tests:
+          - not_null
+
+      - name: station_id
+        description: "Station identifier"
+        tests:
+          - not_null
+
+      - name: bikes_to_add_or_remove
+        description: "Number of bikes to add (positive) or remove (negative)"
+        tests:
+          - not_null
+
+      - name: rebalancing_recommendation
+        description: "Text recommendation for rebalancing"
+        tests:
+          - not_null
