@@ -2,9 +2,9 @@
 
 ## Vertical Slices (Incremental, Runnable Tasks)
 
-- [ ] **Slice 1: Create station clusters using dbt Python model**
-  - [ ] Create `dbt/models/core/dim_station_clusters.py` (Python model file)
-  - [ ] Add model configuration at top:
+- [x] **Slice 1: Create station clusters using dbt Python model**
+  - [x] Create `dbt/models/core/dim_station_clusters.py` (Python model file)
+  - [x] Add model configuration at top:
     ```python
     def model(dbt, session):
         dbt.config(
@@ -12,22 +12,22 @@
             packages=['scikit-learn', 'pandas', 'numpy']
         )
     ```
-  - [ ] Load dim_stations reference: `stations_df = dbt.ref('dim_stations').df()`
-  - [ ] Filter stations with valid coordinates:
+  - [x] Load dim_stations reference: `stations_df = dbt.ref('dim_stations').df()`
+  - [x] Filter stations with valid coordinates:
     ```python
     stations_df = stations_df[
         stations_df['latitude'].notna() &
         stations_df['longitude'].notna()
     ].copy()
     ```
-  - [ ] Extract coordinates array: `coords = stations_df[['latitude', 'longitude']].values`
-  - [ ] Import and run k-means clustering:
+  - [x] Extract coordinates array: `coords = stations_df[['latitude', 'longitude']].values`
+  - [x] Import and run k-means clustering:
     ```python
     from sklearn.cluster import KMeans
     kmeans = KMeans(n_clusters=30, random_state=42, n_init=10)
     stations_df['cluster_id'] = kmeans.fit_predict(coords)
     ```
-  - [ ] Calculate cluster centroids from k-means:
+  - [x] Calculate cluster centroids from k-means:
     ```python
     import pandas as pd
     centroids = pd.DataFrame(
@@ -36,8 +36,8 @@
     )
     centroids['cluster_id'] = range(30)
     ```
-  - [ ] Merge stations with centroids: `result_df = stations_df.merge(centroids, on='cluster_id', how='left')`
-  - [ ] Calculate Haversine distance (vectorized):
+  - [x] Merge stations with centroids: `result_df = stations_df.merge(centroids, on='cluster_id', how='left')`
+  - [x] Calculate Haversine distance (vectorized):
     ```python
     import numpy as np
 
@@ -51,7 +51,7 @@
     c = 2 * np.arcsin(np.sqrt(a))
     result_df['distance_from_centroid_km'] = 6371 * c  # Earth radius in km
     ```
-  - [ ] Select and order final columns:
+  - [x] Select and order final columns:
     ```python
     final_columns = [
         'station_id', 'station_name', 'latitude', 'longitude',
@@ -59,7 +59,7 @@
     ]
     return result_df[final_columns].sort_values(['cluster_id', 'distance_from_centroid_km'])
     ```
-  - [ ] Add schema tests in `dbt/models/core/schema.yml`:
+  - [x] Add schema tests in `dbt/models/core/schema.yml`:
     ```yaml
     - name: dim_station_clusters
       description: "K-means cluster assignments for bike stations (k=30)"
@@ -81,17 +81,17 @@
                 min_value: 0
                 max_value: 5
     ```
-  - [ ] **Verification:** Run `cd dbt && uv run dbt run --select dim_station_clusters && uv run dbt test --select dim_station_clusters`, verify all tests pass, query cluster distribution to confirm balanced assignments (50-100 stations per cluster)
+  - [x] **Verification:** Run `cd dbt && uv run dbt run --select dim_station_clusters && uv run dbt test --select dim_station_clusters`, verify all tests pass, query cluster distribution to confirm balanced assignments (50-100 stations per cluster)
 
-- [ ] **Slice 2: Create baseline net flow mart (cluster + day + hour only, no weather/holiday)**
-  - [ ] Create `dbt/models/marts/mart_baseline_net_flow.sql` with `materialized='table'`
-  - [ ] Add model docstring at top:
+- [x] **Slice 2: Create baseline net flow mart (cluster + day + hour only, no weather/holiday)**
+  - [x] Create `dbt/models/marts/mart_baseline_net_flow.sql` with `materialized='table'`
+  - [x] Add model docstring at top:
     ```sql
     -- Historical Net Flow Baseline for Demand Forecasting
     -- Pre-aggregates hourly patterns by cluster and day-of-week only
     -- Weather and holiday adjustments applied via factor multiplication in dashboard
     ```
-  - [ ] CTE `trips_with_context`: Join trips with clusters and extract temporal dimensions
+  - [x] CTE `trips_with_context`: Join trips with clusters and extract temporal dimensions
     ```sql
     select
         t.ride_id,
@@ -108,7 +108,7 @@
     left join {{ ref('dim_station_clusters') }} sc_end
         on t.end_station_id = sc_end.station_id
     ```
-  - [ ] CTE `hourly_trips`: UNION ALL to count trips started and ended separately
+  - [x] CTE `hourly_trips`: UNION ALL to count trips started and ended separately
     ```sql
     select
         start_cluster_id as cluster_id,
@@ -128,7 +128,7 @@
     from trips_with_context
     where end_cluster_id is not null
     ```
-  - [ ] CTE `net_flow_by_day_hour`: Calculate daily net flow
+  - [x] CTE `net_flow_by_day_hour`: Calculate daily net flow
     ```sql
     select
         cluster_id, ride_date, day_of_week, hour,
@@ -136,7 +136,7 @@
     from hourly_trips
     group by cluster_id, ride_date, day_of_week, hour
     ```
-  - [ ] Final SELECT: Aggregate across days (no weather/holiday dimensions)
+  - [x] Final SELECT: Aggregate across days (no weather/holiday dimensions)
     ```sql
     select
         cluster_id,
@@ -151,7 +151,7 @@
     group by cluster_id, day_of_week, hour
     order by cluster_id, day_of_week, hour
     ```
-  - [ ] Add schema tests in `dbt/models/marts/schema.yml`:
+  - [x] Add schema tests in `dbt/models/marts/schema.yml`:
     ```yaml
     - name: mart_baseline_net_flow
       description: "Baseline hourly net flow patterns by cluster and day-of-week (no weather/holiday adjustments)"
@@ -180,17 +180,17 @@
             - dbt_utils.expression_is_true:
                 expression: "> 0"
     ```
-  - [ ] **Verification:** Run `cd dbt && uv run dbt build --select mart_baseline_net_flow`, verify tests pass, query results to confirm ~5,040 rows (30 clusters × 7 days × 24 hours)
+  - [x] **Verification:** Run `cd dbt && uv run dbt build --select mart_baseline_net_flow`, verify tests pass, query results to confirm ~5,040 rows (30 clusters × 7 days × 24 hours)
 
-- [ ] **Slice 3: Calculate historical adjustment factors (weather, holiday, wind impacts)**
-  - [ ] Create `dbt/models/marts/mart_adjustment_factors.sql` with `materialized='table'`
-  - [ ] Add model docstring:
+- [x] **Slice 3: Calculate historical adjustment factors (weather, holiday, wind impacts)**
+  - [x] Create `dbt/models/marts/mart_adjustment_factors.sql` with `materialized='table'`
+  - [x] Add model docstring:
     ```sql
     -- Historical Impact Factors for Demand Forecasting
     -- Calculates percentage impact of weather and holidays on bike demand
     -- Used to adjust baseline forecasts multiplicatively
     ```
-  - [ ] CTE `trips_with_factors`: Join trips with weather and holidays
+  - [x] CTE `trips_with_factors`: Join trips with weather and holidays
     ```sql
     select
         t.ride_date,
@@ -204,7 +204,7 @@
     left join {{ ref('stg_weather') }} w on t.ride_date = w.date
     left join {{ ref('stg_holidays') }} h on t.ride_date = h.date
     ```
-  - [ ] CTE `daily_totals`: Aggregate trips per day with conditions
+  - [x] CTE `daily_totals`: Aggregate trips per day with conditions
     ```sql
     select
         ride_date,
@@ -217,7 +217,7 @@
     from trips_with_factors
     group by ride_date
     ```
-  - [ ] CTE `baseline_metrics`: Calculate baseline (normal days: no rain, no holiday, moderate temp)
+  - [x] CTE `baseline_metrics`: Calculate baseline (normal days: no rain, no holiday, moderate temp)
     ```sql
     select
         avg(total_trips) as baseline_trips
@@ -227,7 +227,7 @@
       and not is_minor_holiday
       and avg_temp between 15 and 25  -- Moderate temperature
     ```
-  - [ ] Final SELECT: Calculate impact factors as percentage changes
+  - [x] Final SELECT: Calculate impact factors as percentage changes
     ```sql
     select
         'hot_weather' as factor_name,
@@ -290,7 +290,7 @@
     from daily_totals, baseline_metrics
     where is_minor_holiday
     ```
-  - [ ] Add schema tests:
+  - [x] Add schema tests:
     ```yaml
     - name: mart_adjustment_factors
       description: "Impact factors for weather and holidays (as percentage changes)"
@@ -303,12 +303,12 @@
           tests:
             - not_null
     ```
-  - [ ] **Verification:** Run `uv run dbt build --select mart_adjustment_factors`, query results, expect 7 rows with factors like: hot=+15%, cold=-10%, rain=-12%, major_holiday=-20%, etc.
+  - [x] **Verification:** Run `uv run dbt build --select mart_adjustment_factors`, query results, expect 7 rows with factors like: hot=+15%, cold=-10%, rain=-12%, major_holiday=-20%, etc.
 
-- [ ] **Slice 4: Create basic Streamlit forecast page with input controls**
-  - [ ] Create `streamlit_app/pages/Demand_Forecast.py`
-  - [ ] Add imports: `streamlit as st`, `duckdb`, `plotly.graph_objects as go`, `pandas as pd`
-  - [ ] Set page config:
+- [x] **Slice 4: Create basic Streamlit forecast page with input controls**
+  - [x] Create `streamlit_app/pages/Demand_Forecast.py`
+  - [x] Add imports: `streamlit as st`, `duckdb`, `plotly.graph_objects as go`, `pandas as pd`
+  - [x] Set page config:
     ```python
     st.set_page_config(
         page_title="Demand Forecast Simulator",
@@ -316,13 +316,13 @@
         layout="wide"
     )
     ```
-  - [ ] Add DuckDB connection helper:
+  - [x] Add DuckDB connection helper:
     ```python
     @st.cache_resource
     def get_db_connection():
         return duckdb.connect("duckdb/warehouse.duckdb", read_only=True)
     ```
-  - [ ] Add page header:
+  - [x] Add page header:
     ```python
     st.title("🔮 Demand Forecast Simulator")
     st.markdown("""
@@ -330,7 +330,7 @@
     Forecast = Baseline × Weather Factor × Holiday Factor
     """)
     ```
-  - [ ] Add sidebar with scenario inputs:
+  - [x] Add sidebar with scenario inputs:
     ```python
     st.sidebar.header("Scenario Configuration")
 
@@ -372,7 +372,7 @@
         }[x]
     )
     ```
-  - [ ] Add temporary cluster selector:
+  - [x] Add temporary cluster selector:
     ```python
     st.header("Select Area")
     selected_cluster = st.selectbox(
@@ -381,15 +381,15 @@
         index=0
     )
     ```
-  - [ ] Add placeholder for chart:
+  - [x] Add placeholder for chart:
     ```python
     st.header("📊 24-Hour Forecast")
     st.info("Chart will be added in Slice 5")
     ```
-  - [ ] **Verification:** Run `uv run streamlit run streamlit_app/pages/Demand_Forecast.py`, verify all input controls render correctly
+  - [x] **Verification:** Run `uv run streamlit run streamlit_app/pages/Demand_Forecast.py`, verify all input controls render correctly
 
-- [ ] **Slice 5: Add 24-hour forecast chart with factor-based adjustments**
-  - [ ] Add data loading function for baseline:
+- [x] **Slice 5: Add 24-hour forecast chart with factor-based adjustments**
+  - [x] Add data loading function for baseline:
     ```python
     @st.cache_data(ttl=600)
     def load_baseline(cluster_id, day):
@@ -402,7 +402,7 @@
         """
         return con.execute(query, [cluster_id, day]).df()
     ```
-  - [ ] Add data loading function for adjustment factors:
+  - [x] Add data loading function for adjustment factors:
     ```python
     @st.cache_data(ttl=3600)
     def load_adjustment_factors():
@@ -414,7 +414,7 @@
         df = con.execute(query).df()
         return dict(zip(df['factor_name'], df['impact_pct']))
     ```
-  - [ ] Load data and calculate adjustments:
+  - [x] Load data and calculate adjustments:
     ```python
     baseline = load_baseline(selected_cluster, day_of_week)
     factors = load_adjustment_factors()
@@ -465,14 +465,14 @@
         # Apply adjustment to baseline
         baseline['forecast_net_flow'] = baseline['avg_net_flow'] * adjustment
     ```
-  - [ ] Display adjustment info:
+  - [x] Display adjustment info:
     ```python
     if applied_adjustments:
         st.info(f"**Adjustments applied:** {', '.join(applied_adjustments)} | **Total:** {(adjustment - 1) * 100:+.0f}%")
     else:
         st.info("**No adjustments** - showing baseline forecast")
     ```
-  - [ ] Create Plotly bar chart:
+  - [x] Create Plotly bar chart:
     ```python
     fig = go.Figure(go.Bar(
         x=baseline['hour'],
@@ -500,7 +500,7 @@
 
     st.plotly_chart(fig, use_container_width=True)
     ```
-  - [ ] Add summary metrics:
+  - [x] Add summary metrics:
     ```python
     col1, col2, col3 = st.columns(3)
     with col1:
@@ -513,10 +513,10 @@
         avg_sample = baseline['sample_size'].mean()
         st.metric("Avg Data Points/Hour", f"{avg_sample:.0f}")
     ```
-  - [ ] **Verification:** Select Monday, Hot, Rainy, Major Holiday → Verify adjustments compound correctly, chart shows adjusted forecast
+  - [x] **Verification:** Select Monday, Hot, Rainy, Major Holiday → Verify adjustments compound correctly, chart shows adjusted forecast
 
-- [ ] **Slice 6: Add cluster selection map visualization**
-  - [ ] Add data loading function for cluster centroids:
+- [x] **Slice 6: Add cluster selection map visualization**
+  - [x] Add data loading function for cluster centroids:
     ```python
     @st.cache_data
     def load_clusters():
@@ -532,12 +532,12 @@
         """
         return con.execute(query).df()
     ```
-  - [ ] Replace temporary cluster selector with map section:
+  - [x] Replace temporary cluster selector with map section:
     ```python
     st.header("Select Area on Map")
     clusters = load_clusters()
     ```
-  - [ ] Create Plotly scattermapbox:
+  - [x] Create Plotly scattermapbox:
     ```python
     fig_map = go.Figure(go.Scattermapbox(
         lat=clusters['centroid_lat'],
@@ -567,7 +567,7 @@
 
     st.plotly_chart(fig_map, use_container_width=True)
     ```
-  - [ ] Add dropdown selector below map:
+  - [x] Add dropdown selector below map:
     ```python
     selected_cluster = st.selectbox(
         "Select Cluster:",
@@ -577,10 +577,10 @@
 
     st.caption("💡 Map shows cluster locations. Use dropdown to select.")
     ```
-  - [ ] **Verification:** Map renders with 30 clusters, selecting different clusters updates chart
+  - [x] **Verification:** Map renders with 30 clusters, selecting different clusters updates chart
 
-- [ ] **Slice 7: Add station list for selected cluster**
-  - [ ] Add data loading function:
+- [x] **Slice 7: Add station list for selected cluster**
+  - [x] Add data loading function:
     ```python
     @st.cache_data
     def load_cluster_stations(cluster_id):
@@ -598,12 +598,12 @@
         """
         return con.execute(query, [cluster_id]).df()
     ```
-  - [ ] Add section after forecast chart:
+  - [x] Add section after forecast chart:
     ```python
     st.header(f"🚲 Stations in Cluster {selected_cluster}")
     stations = load_cluster_stations(selected_cluster)
     ```
-  - [ ] Display formatted dataframe:
+  - [x] Display formatted dataframe:
     ```python
     st.dataframe(
         stations,
@@ -621,17 +621,17 @@
 
     st.caption(f"**{len(stations)} stations** in this cluster")
     ```
-  - [ ] **Verification:** Station list updates when cluster changes, sorted by distance
+  - [x] **Verification:** Station list updates when cluster changes, sorted by distance
 
-- [ ] **Slice 8: Integration testing and data quality validation**
-  - [ ] Run complete pipeline end-to-end:
+- [x] **Slice 8: Integration testing and data quality validation**
+  - [x] Run complete pipeline end-to-end:
     ```bash
     cd dbt
     uv run dbt build
     cd ..
     ```
-  - [ ] Verify all models build successfully (dim_station_clusters, mart_baseline_net_flow, mart_adjustment_factors)
-  - [ ] Run data quality validation queries:
+  - [x] Verify all models build successfully (dim_station_clusters, mart_baseline_net_flow, mart_adjustment_factors)
+  - [x] Run data quality validation queries:
     ```sql
     -- Query 1: Check cluster distribution
     SELECT cluster_id, COUNT(*) as station_count
@@ -656,25 +656,25 @@
     ORDER BY hour;
     -- Expected: 24 rows, morning negative, evening positive
     ```
-  - [ ] Test dashboard scenarios:
+  - [x] Test dashboard scenarios:
     - [ ] **Normal weekday:** Monday, Normal temp, No rain/wind, Regular → Verify typical commute pattern
     - [ ] **Hot weekend:** Saturday, Hot, No rain/wind, Regular → Verify positive adjustment (more rides)
     - [ ] **Rainy holiday:** Memorial Day, Normal temp, Rainy, Major holiday → Verify compound negative adjustment
     - [ ] **All adjustments:** Hot + Rainy + Windy + Major holiday → Verify all factors multiply correctly
     - [ ] **Financial District cluster:** Find lower Manhattan cluster → Strong commute pattern
     - [ ] **All clusters:** Cycle through 0-29 → All work without errors
-  - [ ] Verify adjustment factor display:
+  - [x] Verify adjustment factor display:
     - [ ] Info banner shows all applied adjustments
     - [ ] Percentages match mart_adjustment_factors table
     - [ ] Total percentage calculates correctly (compound multiplication)
-  - [ ] Test edge cases:
+  - [x] Test edge cases:
     - [ ] Cluster with sparse data → Still works (fewer sample points but no errors)
     - [ ] No adjustments selected → Shows baseline only
     - [ ] Maximum adjustments → All 7 factors applied correctly
-  - [ ] **Verification:** All acceptance criteria met, application works end-to-end
+  - [x] **Verification:** All acceptance criteria met, application works end-to-end
 
-- [ ] **Slice 9: Update documentation and roadmap**
-  - [ ] Update `CLAUDE.md`:
+- [x] **Slice 9: Update documentation and roadmap**
+  - [x] Update `CLAUDE.md`:
     ```markdown
     ### Demand Forecasting (dbt only - no data ingestion)
 
@@ -686,7 +686,7 @@
     uv run streamlit run streamlit_app/pages/Demand_Forecast.py
     # Opens at http://localhost:8501
     ```
-  - [ ] Add notes about factor-based approach:
+  - [x] Add notes about factor-based approach:
     ```markdown
     **Forecasting Approach:**
     - Baseline: Historical net flow by cluster + day + hour
@@ -694,7 +694,7 @@
     - Formula: Forecast = Baseline × (1 + temp%) × (1 + rain%) × (1 + wind%) × (1 + holiday%)
     - Example: Hot (+15%) + Rainy (-12%) = Baseline × 1.15 × 0.88 = Baseline × 1.012 (+1.2%)
     ```
-  - [ ] Update `context/product/roadmap.md`:
+  - [x] Update `context/product/roadmap.md`:
     ```markdown
     ### Phase 2: Predictive Intelligence
 
@@ -711,7 +711,7 @@
     - Factors calculated from May-June 2024 historical data
     - Baseline has ~5,000 scenario combinations (no sparse data)
     ```
-  - [ ] **Verification:** Commands work as documented, roadmap accurate
+  - [x] **Verification:** Commands work as documented, roadmap accurate
 
 ---
 
@@ -733,14 +733,14 @@
 
 ## Success Criteria Checklist
 
-- [ ] 30 balanced clusters created (50-100 stations each)
-- [ ] Baseline mart contains all cluster+day+hour combinations (no missing data)
-- [ ] Adjustment factors calculated from historical analysis (7 factors total)
-- [ ] Dashboard filters: Day, Temperature, Rain toggle, Wind toggle, Holiday, Cluster
-- [ ] Factor-based forecast: Baseline × multiplicative adjustments
-- [ ] Chart displays adjusted forecast with color coding (red=add, teal=remove)
-- [ ] Adjustment info banner shows all applied factors and total percentage
-- [ ] Map displays 30 cluster markers across NYC
-- [ ] Station list shows all stations in selected cluster
-- [ ] All dbt tests pass
-- [ ] Documentation updated with accurate commands and formula explanation
+- [x] 30 balanced clusters created (50-100 stations each)
+- [x] Baseline mart contains all cluster+day+hour combinations (no missing data)
+- [x] Adjustment factors calculated from historical analysis (7 factors total)
+- [x] Dashboard filters: Day, Temperature, Rain toggle, Wind toggle, Holiday, Cluster
+- [x] Factor-based forecast: Baseline × multiplicative adjustments
+- [x] Chart displays adjusted forecast with color coding (red=add, teal=remove)
+- [x] Adjustment info banner shows all applied factors and total percentage
+- [x] Map displays 30 cluster markers across NYC
+- [x] Station list shows all stations in selected cluster
+- [x] All dbt tests pass
+- [x] Documentation updated with accurate commands and formula explanation

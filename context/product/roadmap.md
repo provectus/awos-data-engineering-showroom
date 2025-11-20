@@ -27,13 +27,17 @@ _Build the core data infrastructure for holiday and event analysis._
 
 ---
 
-### Phase 2: Predictive Intelligence (V2 - High Value)
+### Phase 2: Predictive Intelligence (V2 - High Value) 🔄 **IN PROGRESS**
 
 _Enable forecasting and scenario modeling for operations planning._
 
-- [ ] **Demand Forecasting Engine**
-  - [ ] **Station-Level Predictions:** Forecast future bike demand by station based on weather, holidays, and events
-  - [ ] **Multi-Factor Correlation:** Combine weather + day-of-week + holiday/event data for accurate predictions
+- [x] **Demand Forecasting Engine** ✅ **COMPLETED**
+  - [x] **Station Clustering:** K-means clustering of 2,147 stations into 30 geographic areas for area-level demand predictions
+  - [x] **Baseline Net Flow Calculation:** Historical average net flow (trips_ended - trips_started) by cluster, day-of-week, and hour (5,040 patterns)
+  - [x] **Multi-Factor Correlation:** 17 adjustment factors combining temperature (4 levels), wind (2 levels), rain (2 levels), holidays (2 types), and day-of-week (7 days) for accurate predictions
+  - [x] **Factor-Based Forecasting:** Multiplicative forecast model: `adjusted_net_flow = baseline × day_factor × temp_factor × wind_factor × rain_factor × holiday_factor`
+  - [x] **24-Hour Prediction Dashboard:** Interactive Streamlit dashboard with forecast chart, rebalancing recommendations, cluster map, and station list
+  - [x] **Rebalancing Recommendations:** Actionable hourly guidance (Add/Remove bikes) with 3-bike threshold logic matching game rebalancing patterns
 
 - [ ] **"What-If" Scenario Modeling**
   - [ ] **Scenario Builder Tool:** Allow users to model hypothetical situations (e.g., "Yankees game + rain + Saturday")
@@ -46,9 +50,10 @@ _Enable forecasting and scenario modeling for operations planning._
 
 _Make insights accessible and actionable through dashboards._
 
-- [x] **Enhanced Analytics Dashboards** ✅ **PARTIALLY COMPLETED**
+- [x] **Enhanced Analytics Dashboards** ✅ **MOSTLY COMPLETED**
   - [x] **Holiday Impact Dashboard:** Visualize demand patterns during holidays with historical comparisons (citywide summary, station-level heatmaps, hourly patterns, geographic distribution)
   - [x] **Game Impact Dashboard:** Interactive rebalancing calculator with demand analysis and station proximity maps for Yankees/Mets games
+  - [x] **Demand Forecast Dashboard:** Interactive 24-hour forecast interface with 6 input controls (day, temperature, wind, rain, holiday, cluster), forecast chart, rebalancing recommendations table, cluster map visualization, and station list
   - [ ] **Event Calendar View:** Display upcoming events overlaid with predicted demand by station
   - [ ] **What-If Scenario Dashboard:** Interactive interface for testing scenarios and viewing forecasts
 
