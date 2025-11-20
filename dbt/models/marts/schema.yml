@@ -406,3 +406,29 @@ models:
         description: "Net flow (trips_ended - trips_started). Negative = add bikes, Positive = remove bikes"
         tests:
           - not_null
+
+  - name: mart_adjustment_factors
+    description: "Historical adjustment factors for weather and holiday impacts on demand"
+    columns:
+      - name: factor_name
+        description: "Factor identifier (hot_weather, rain, major_holiday, etc.)"
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              values: ['hot_weather', 'warm_weather', 'neutral_weather', 'cold_weather', 'light_rain', 'heavy_rain', 'weak_wind', 'strong_wind', 'major_holiday', 'minor_holiday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+
+      - name: description
+        description: "Human-readable description of the factor"
+        tests:
+          - not_null
+
+      - name: impact_pct
+        description: "Historical impact percentage (e.g., -20 means 20% decrease)"
+        tests:
+          - not_null
+
+      - name: adjustment_multiplier
+        description: "Multiplicative factor (1 + impact_pct/100)"
+        tests:
+          - not_null
