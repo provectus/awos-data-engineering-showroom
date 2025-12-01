@@ -59,6 +59,13 @@ uv run python dlt_pipeline/bike.py
 
 # Ingest weather data (fetches from Open-Meteo API)
 uv run python dlt_pipeline/weather.py
+
+# Ingest holiday data (fetches US holidays from Nager.Date API)
+# Default: ingests 2024 holidays
+uv run python dlt_pipeline/holidays.py
+
+# To ingest holidays for specific years, edit holidays.py main block:
+# result = run_holiday_pipeline([2024, 2025, 2026])
 ```
 
 **Data Quality Validation (Great Expectations)**:
@@ -121,6 +128,17 @@ uv run streamlit run streamlit_app/Home.py
 # Opens at http://localhost:8501
 ```
 
+**Dashboard Pages:**
+- **Home.py** - Overview and navigation
+- **pages/Weather.py** - Weather impact analysis with correlation metrics, time series charts, and what-if temperature analysis
+- **pages/Holiday_Impact.py** - Historical holiday analysis with 6 sections:
+  1. Holiday Selector & KPI Cards (trips %, duration %, statistical significance)
+  2. Demand Comparison Chart (baseline vs holiday for total/member/casual trips, duration)
+  3. Neighborhood-Level Demand Map (K-Means clustering with 10-50 adjustable clusters, color-coded by % change)
+  4. Hourly Demand Pattern (24-hour comparison showing peak hour shifts)
+  5. Top Stations Ranking (top 10 increased/decreased demand with rebalancing recommendations)
+  6. Holiday Comparison Table (sortable table comparing all 4 holidays side-by-side)
+
 **Jupyter Notebooks**:
 ```bash
 # Start Jupyter for exploratory analysis
@@ -148,8 +166,6 @@ Open-Meteo API            Checkpoints    Models      Dashboards
 4. **Consumption**: Streamlit/Jupyter query `warehouse.duckdb` marts for analytics
 
 ### Key Database Locations
-- `duckdb/bike_ingestion.duckdb` - Raw bike trip data from dlt
-- `duckdb/weather_ingestion.duckdb` - Raw weather data from dlt
 - `duckdb/warehouse.duckdb` - Transformed analytics tables (dbt output)
 
 ### dbt Model Layers
@@ -160,13 +176,17 @@ Open-Meteo API            Checkpoints    Models      Dashboards
 - **Purpose**: Type casting, basic cleaning, no business logic
 
 **Core** (`models/core/`):
-- `dim_stations.sql` - Station dimension (deduplicated station info)
+- `dim_stations.sql` - Station dimension (deduplicated station info with lat/lon coordinates and area classification: Manhattan Financial, Manhattan Midtown, Brooklyn, etc.)
 - `fct_trips_daily.sql` - Daily trip aggregations by station
 - **Purpose**: Conformed dimensions and fact tables
 
 **Marts** (`models/marts/`):
 - `mart_demand_daily.sql` - Daily demand metrics (trips, duration, user types)
 - `mart_weather_effect.sql` - Weather-enriched demand analysis
+- `mart_holiday_impact_summary.sql` - Citywide holiday impact metrics (4 rows - one per holiday)
+- `mart_holiday_impact_by_station.sql` - Station-level holiday impact (8,370 rows - 4 holidays × ~2,093 stations)
+- `mart_holiday_impact_by_hour.sql` - Hourly holiday demand patterns (96 rows - 4 holidays × 24 hours)
+- `mart_holiday_impact_by_area.sql` - Geographic area holiday impact (36 rows - 4 holidays × 9 areas)
 - **Purpose**: Business-ready analytics tables for dashboards
 
 ### DuckDB Query Patterns
@@ -177,7 +197,14 @@ import duckdb
 
 # Read from warehouse
 conn = duckdb.connect('duckdb/warehouse.duckdb', read_only=True)
-df = conn.execute("SELECT * FROM marts.mart_demand_daily LIMIT 10").fetchdf()
+df = conn.execute("SELECT * FROM main_marts.mart_demand_daily LIMIT 10").fetchdf()
+
+# Example: View Memorial Day impact
+memorial_day = conn.execute("""
+    SELECT * FROM main_marts.mart_holiday_impact_summary
+    WHERE holiday_name = 'Memorial Day'
+""").fetchdf()
+
 conn.close()
 ```
 

@@ -7,14 +7,6 @@ weather_bike_demo:
       extensions:
         - httpfs
         - parquet
-      # Attach external DuckDB databases for raw data sources
-      attach:
-        - path: ../duckdb/bike_ingestion.duckdb
-          alias: bike_ingestion
-          read_only: true
-        - path: ../duckdb/weather_ingestion.duckdb
-          alias: weather_ingestion
-          read_only: true
     
     prod:
       type: duckdb
@@ -23,14 +15,6 @@ weather_bike_demo:
       extensions:
         - httpfs
         - parquet
-      # Attach external DuckDB databases for raw data sources
-      attach:
-        - path: ../duckdb/bike_ingestion.duckdb
-          alias: bike_ingestion
-          read_only: true
-        - path: ../duckdb/weather_ingestion.duckdb
-          alias: weather_ingestion
-          read_only: true
   
   target: dev
 

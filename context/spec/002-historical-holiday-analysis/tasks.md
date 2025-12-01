@@ -1,0 +1,195 @@
+# Task List: Historical Holiday Analysis
+
+## Vertical Slices (Incremental, Runnable Tasks)
+
+- [x] **Slice 1: Enhance dim_stations with lat/lon and basic area classification**
+  - [x] Add CTE `stations_with_coords` to extract lat/lon from `stg_bike_trips` grouped by start_station_id (use FIRST(start_lat) and FIRST(start_lng) to get non-null values)
+  - [x] Add latitude DOUBLE column to final SELECT in `dbt/models/core/dim_stations.sql`
+  - [x] Add longitude DOUBLE column to final SELECT
+  - [x] Add area VARCHAR column using CASE statement with lat/lon ranges:
+    - Manhattan - Financial: lat BETWEEN 40.700-40.720, lon BETWEEN -74.020 to -73.980
+    - Manhattan - Midtown: lat BETWEEN 40.740-40.780, lon BETWEEN -74.010 to -73.970
+    - Manhattan - Upper West: lat BETWEEN 40.780-40.800, lon BETWEEN -74.000 to -73.950
+    - Manhattan - Upper East: lat BETWEEN 40.780-40.800, lon BETWEEN -73.980 to -73.940
+    - Manhattan - Downtown: lat BETWEEN 40.700-40.730, lon BETWEEN -73.970 to -73.930
+    - Brooklyn: lat BETWEEN 40.580-40.740, lon BETWEEN -74.050 to -73.833
+    - Queens: lat BETWEEN 40.690-40.800, lon BETWEEN -73.962 to -73.700
+    - Bronx: lat BETWEEN 40.790-40.880, lon BETWEEN -73.930 to -73.830
+    - Jersey City: lat BETWEEN 40.680-40.760, lon BETWEEN -74.080 to -74.020
+    - Other: ELSE clause
+  - [x] Add WHERE clause to filter out NULL lat/lon values
+  - [x] Add sanity check filters: latitude BETWEEN 40.5 AND 41.0, longitude BETWEEN -74.3 AND -73.7
+  - [x] **Verification:** Run `cd dbt && uv run dbt run --select dim_stations`, then query `SELECT area, COUNT(*) FROM main_core.dim_stations GROUP BY area` to verify ~2000 stations have areas assigned, minimal 'Other' count
+
+- [x] **Slice 2: Create mart_holiday_impact_summary with one holiday (Memorial Day)**
+  - [x] Create file `dbt/models/marts/mart_holiday_impact_summary.sql`
+  - [x] Add config block: `{{ config(materialized='table') }}`
+  - [x] CTE `holidays`: SELECT date, holiday_name, is_major, is_working_day FROM stg_holidays WHERE date = '2024-05-27' (Memorial Day only)
+  - [x] CTE `baseline_days`: Cross join holidays with distinct ride_date from stg_bike_trips, filter to 15 days before/after using `dateadd('day', -15, h.date)` and `dateadd('day', 15, h.date)`, exclude weekends using `dayofweek(d.ride_date) NOT IN (0, 6)`, exclude other holidays
+  - [x] CTE `holiday_metrics`: JOIN stg_bike_trips with holidays on ride_date = date, aggregate COUNT(*) as total_trips_holiday, AVG(ride_mins) as avg_duration_holiday
+  - [x] CTE `baseline_metrics`: JOIN stg_bike_trips with baseline_days on ride_date, aggregate and average metrics (divide by baseline_days_count)
+  - [x] Final SELECT: Join holiday_metrics and baseline_metrics, calculate trips_abs_change (holiday - baseline), trips_pct_change using formula `((holiday - baseline) / NULLIF(baseline, 0)) * 100`
+  - [x] Add similar calculations for duration_pct_change
+  - [x] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_summary`, query the mart to verify 1 row exists with Memorial Day showing trips_pct_change between -20% and -40%
+
+- [x] **Slice 3: Expand mart_holiday_impact_summary to all holidays**
+  - [x] Update `holidays` CTE: Remove Memorial Day date filter, change to WHERE date BETWEEN '2024-05-01' AND '2024-06-30' to process all May-June holidays
+  - [x] Add member/casual breakdown to `holiday_metrics` CTE:
+    - SUM(CASE WHEN member_casual = 'member' THEN 1 ELSE 0 END) as member_trips_holiday
+    - SUM(CASE WHEN member_casual = 'casual' THEN 1 ELSE 0 END) as casual_trips_holiday
+  - [x] Add same member/casual breakdown to `baseline_metrics` CTE
+  - [x] Calculate member_trips_pct_change and casual_trips_pct_change in final SELECT
+  - [x] Add baseline metadata columns to final SELECT:
+    - MIN(baseline_date) as baseline_start_date
+    - MAX(baseline_date) as baseline_end_date
+    - COUNT(DISTINCT baseline_date) as baseline_days_count
+  - [x] Add ORDER BY holiday_date to final SELECT
+  - [x] **Verification:** Query mart, verify 4 rows (Memorial Day, Juneteenth, Puerto Rican Day Parade, Truman Day), all have baseline_days_count between 25-30, all have calculated percentage changes
+
+- [x] **Slice 4: Create mart_holiday_impact_by_station**
+  - [x] Create file `dbt/models/marts/mart_holiday_impact_by_station.sql`
+  - [x] Add config block: `{{ config(materialized='table') }}`
+  - [x] Reuse holidays and baseline_days CTEs from summary mart
+  - [x] CTE `holiday_metrics_by_station`: JOIN stg_bike_trips with holidays, GROUP BY date and start_station_id, COUNT(*) as trips_holiday
+  - [x] CTE `baseline_metrics_by_station`: JOIN stg_bike_trips with baseline_days, GROUP BY holiday_date and start_station_id, AVG(trip_count) as trips_baseline
+  - [x] Final SELECT: Join holiday and baseline metrics, join with dim_stations using `LEFT JOIN {{ ref('dim_stations') }} s ON station_id = s.station_id`
+  - [x] Include columns: holiday_date, holiday_name, station_id, station_name, area, latitude, longitude
+  - [x] Calculate trips_holiday, trips_baseline, trips_abs_change, trips_pct_change
+  - [x] Add ORDER BY holiday_date, trips_pct_change DESC
+  - [x] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_by_station`, verify ~8000 rows (4 holidays × ~2000 stations), query Financial District stations for Memorial Day to confirm large negative trips_pct_change
+
+- [x] **Slice 5: Create mart_holiday_impact_by_hour and mart_holiday_impact_by_area**
+  - [x] Create file `dbt/models/marts/mart_holiday_impact_by_hour.sql`:
+    - Add config: `materialized='table'`
+    - Reuse holidays and baseline_days CTEs
+    - Extract hour using `EXTRACT(HOUR FROM started_at) as hour_of_day`
+    - CTE `holiday_metrics_by_hour`: GROUP BY date and hour_of_day, COUNT(*) as trips_holiday
+    - CTE `baseline_metrics_by_hour`: GROUP BY holiday_date and hour_of_day, AVG(trip_count) as trips_baseline
+    - Final SELECT: holiday_date, holiday_name, hour_of_day (0-23), trips_holiday, trips_baseline, trips_pct_change
+  - [x] Create file `dbt/models/marts/mart_holiday_impact_by_area.sql`:
+    - Add config: `materialized='table'`
+    - Reuse holidays and baseline_days CTEs
+    - JOIN stg_bike_trips with dim_stations to get area for each trip
+    - CTE `holiday_metrics_by_area`: GROUP BY date and area, COUNT(DISTINCT station_id) as station_count, COUNT(*) as trips_holiday
+    - CTE `baseline_metrics_by_area`: GROUP BY holiday_date and area, aggregate trips
+    - Final SELECT: holiday_date, holiday_name, area_name, station_count, trips_holiday, trips_baseline, trips_pct_change, avg_station_trips_holiday, avg_station_trips_baseline
+  - [x] **Verification:** Run `cd dbt && uv run dbt run --select mart_holiday_impact_by_hour mart_holiday_impact_by_area`, verify ~96 rows for by_hour (4 holidays × 24 hours) and ~40 rows for by_area (4 holidays × ~10 areas)
+
+- [x] **Slice 6: Add dbt tests for all 4 mart models**
+  - [x] Update `dbt/models/marts/schema.yml` (or create if doesn't exist)
+  - [x] Add model documentation and tests for `mart_holiday_impact_summary`:
+    - unique test on holiday_date
+    - not_null test on holiday_date
+    - not_null test on baseline_days_count
+    - dbt_utils.accepted_range test on baseline_days_count (min_value: 1, max_value: 30)
+  - [x] Add model documentation and tests for `mart_holiday_impact_by_station`:
+    - not_null test on area
+    - accepted_values test on area with all 10 defined areas
+    - dbt_utils.unique_combination_of_columns test on (holiday_date || '-' || station_id)
+  - [x] Add model documentation and tests for `mart_holiday_impact_by_hour`:
+    - not_null test on hour_of_day
+    - dbt_utils.accepted_range test on hour_of_day (min_value: 0, max_value: 23)
+  - [x] Add model documentation and tests for `mart_holiday_impact_by_area`:
+    - not_null test on area_name
+    - not_null test on station_count
+  - [x] **Verification:** Run `cd dbt && uv run dbt test --select mart_holiday_impact*`, confirm all tests pass (should be ~12-15 tests total)
+
+- [x] **Slice 7: Create Streamlit dashboard skeleton with Section 1 (Selector & KPIs)**
+  - [x] Create file `streamlit_app/pages/Holiday_Impact.py`
+  - [x] Add module docstring: "Streamlit dashboard for holiday impact analysis"
+  - [x] Add imports: streamlit as st, duckdb, pandas as pd, plotly.express as px, plotly.graph_objects as go
+  - [x] Add page config: `st.set_page_config(page_title="Holiday Impact Analysis", page_icon="🎉", layout="wide")` (matching Weather.py pattern)
+  - [x] Add `get_db_connection()` function with `@st.cache_resource` decorator returning duckdb.connect("duckdb/warehouse.duckdb", read_only=True)
+  - [x] Add `load_holiday_summary()` function with `@st.cache_data(ttl=600)` decorator querying mart_holiday_impact_summary, return df
+  - [x] Add main() function with st.title("🎉 Holiday Impact Analysis")
+  - [x] Section 1: Holiday selector using st.selectbox with holidays from holiday_summary['holiday_name'].unique()
+  - [x] Filter data to selected holiday using df[df['holiday_name'] == selected_holiday].iloc[0]
+  - [x] Section 1: Create 3 columns with st.columns(3)
+  - [x] KPI Card 1: st.metric("Total Trips Change", f"{trips_pct_change:.1f}%", delta=f"{trips_abs_change:,.0f} trips")
+  - [x] KPI Card 2: st.metric("Avg Duration Change", f"{duration_pct_change:.1f}%", delta=f"{duration_abs_change:.1f} mins")
+  - [x] KPI Card 3: st.metric("Statistical Significance", "Pending", delta="p-value TBD") (placeholder for now)
+  - [x] Add `if __name__ == "__main__": main()` block
+  - [x] **Verification:** Run `uv run streamlit run streamlit_app/Home.py` (NOT pages/Holiday_Impact.py!), navigate to "Holiday Impact" in left sidebar, select Memorial Day, verify trips -52.9% and duration +0.9%
+
+- [x] **Slice 8: Add Section 2 (Demand Comparison Chart)**
+  - [x] Add st.markdown("---") divider after Section 1
+  - [x] Add st.subheader("📊 Demand Comparison: Holiday vs Baseline")
+  - [x] Create Plotly grouped bar chart using go.Figure()
+  - [x] Add first trace: go.Bar with name='Baseline', x=['Total Trips', 'Avg Duration', 'Member Trips', 'Casual Trips'], y=[baseline values], marker_color='lightblue'
+  - [x] Add second trace: go.Bar with name='Holiday', x=[same categories], y=[holiday values], marker_color='darkblue'
+  - [x] Update layout: fig.update_layout(barmode='group', height=400, title="Metric Comparison")
+  - [x] Display with st.plotly_chart(fig, use_container_width=True)
+  - [x] **Verification:** Chart renders with Memorial Day showing shorter blue bars for Total Trips and Member Trips, slightly taller bar for Avg Duration
+
+- [x] **Slice 9: Add Section 3 (Neighborhood-Level Heatmap with K-Means Clustering)**
+  - [x] Add imports: `from sklearn.cluster import KMeans` and `import numpy as np`
+  - [x] Add function `load_holiday_by_station(holiday_date)` with @st.cache_data(ttl=600), query mart_holiday_impact_by_station WHERE holiday_date = date
+  - [x] Add helper function `get_rebalancing_flag(pct_change)`: if pct_change > 30 return 'Add bikes', elif pct_change < -30 return 'Remove bikes', else return 'No action'
+  - [x] Add st.slider for cluster count (10-50, default 30, step 5)
+  - [x] Load station data: `station_data = load_holiday_by_station(holiday_data['holiday_date'])`
+  - [x] Implement K-Means clustering: `kmeans = KMeans(n_clusters=n_clusters, random_state=42, n_init=10)`
+  - [x] Aggregate by cluster: sum trips, mean lat/lon, count stations, mode area
+  - [x] Calculate cluster-level percentage change
+  - [x] Apply rebalancing flag to clusters
+  - [x] Add st.markdown("---") and st.subheader("🗺️ Neighborhood-Level Demand Changes")
+  - [x] Create Plotly Scattermapbox with clustered data: `fig = px.scatter_mapbox(cluster_agg, lat="latitude", lon="longitude", color="trips_pct_change", size=abs(cluster_agg["trips_abs_change"]))`
+  - [x] Set color scale: `color_continuous_scale=["red", "yellow", "green"]`, color_continuous_midpoint=0
+  - [x] Add hover data: area, trips_pct_change, trips_holiday, trips_baseline, rebalancing_flag, station_id (count of stations in cluster)
+  - [x] Set map style: `mapbox_style="open-street-map"`, zoom=10, center={"lat": 40.73, "lon": -73.94}
+  - [x] Display with st.plotly_chart(fig, use_container_width=True)
+  - [x] Add dynamic caption explaining clustering (shows cluster count and total stations)
+  - [x] Install scikit-learn: `uv add scikit-learn`
+  - [x] **Verification:** Map shows 30 clusters (default) instead of 2,000+ stations, slider adjusts granularity 10-50, Financial District shows red clusters on Memorial Day, tooltip shows station count per cluster
+
+- [x] **Slice 10: Add Section 4 (Hourly Pattern) and Section 5 (Top Stations)**
+  - [x] Add function `load_holiday_by_hour(holiday_date)` with @st.cache_data(ttl=600), query mart_holiday_impact_by_hour WHERE holiday_date = date
+  - [x] Add st.markdown("---") and st.subheader("⏰ Hourly Demand Patterns")
+  - [x] Load hourly data: `hourly_data = load_holiday_by_hour(holiday_data['holiday_date'])`
+  - [x] Create Plotly line chart using go.Figure()
+  - [x] Add baseline trace: go.Scatter with x=hour_of_day, y=trips_baseline, mode='lines+markers', name='Baseline', line color lightblue
+  - [x] Add holiday trace: go.Scatter with x=hour_of_day, y=trips_holiday, mode='lines+markers', name='Holiday', line color darkblue
+  - [x] Update axes: fig.update_xaxes(title="Hour of Day", dtick=2), fig.update_yaxes(title="Number of Trips")
+  - [x] Update layout: hovermode='x unified', height=400
+  - [x] Display with st.plotly_chart(fig, use_container_width=True)
+  - [x] Add peak hour metrics showing baseline vs holiday peak times
+  - [x] Add st.markdown("---") and st.subheader("🏆 Top Stations by Demand Change")
+  - [x] Create two columns: col1, col2 = st.columns(2)
+  - [x] In col1: st.markdown("📈 Top 10 - Increased Demand"), display top_increase = station_data.nlargest(10, 'trips_pct_change') with formatted dataframe
+  - [x] In col2: st.markdown("📉 Top 10 - Decreased Demand"), display top_decrease = station_data.nsmallest(10, 'trips_pct_change') with formatted dataframe
+  - [x] Format dataframes: percentage with %, trip counts with commas, add rebalancing action column
+  - [x] **Verification:** Hourly chart shows Memorial Day 8am peak -71.5%, 5pm peak -83.1%, peak shifts from 19:00 baseline to 14:00 holiday. Top stations tables show Brooklyn residential in increased list, Manhattan business in decreased list
+
+- [x] **Slice 11: Add Section 6 (Holiday Comparison Table) and Statistical Significance**
+  - [x] Add st.markdown("---") and st.subheader("📅 Compare All Holidays")
+  - [x] Create comparison dataframe: holiday_summary filtered to 8 columns (holiday_name, holiday_date, is_major, is_working_day, trips_pct_change, duration_pct_change, total_trips_holiday, baseline_days_count)
+  - [x] Format data: Convert dates to YYYY-MM-DD, map booleans to Yes/No
+  - [x] Display with st.dataframe using column_config to format all columns with proper NumberColumn format (%.1f%% for percentages, %d for counts), proper widths (small for Yes/No, medium for text), and help text
+  - [x] Add imports: `from scipy import stats`
+  - [x] Create calculate_statistical_significance() function with @st.cache_data(ttl=600):
+    - Query daily trip counts (not individual trips): holiday = single count, baseline = array of daily counts for baseline period
+    - Filter baseline to exclude weekends (dayofweek NOT IN (0,6)) and the holiday itself
+    - Check minimum 5 baseline days required
+    - Calculate one-sample t-test: `t_stat, p_value = stats.ttest_1samp(baseline_counts, holiday_count)` comparing holiday count against baseline distribution
+    - Return tuple: (p_value, is_significant, test_type)
+  - [x] Update KPI Card 3 in Section 1 to call calculate_statistical_significance():
+    - Display "Yes"/"No" for significance with p-value in delta (format: p = 0.0000)
+    - Handle edge cases: insufficient data (<5 baseline days) shows "N/A" with "Insufficient data" delta
+    - Add help text: "T-test comparing holiday trip count vs baseline daily trip distribution: Significant/Not significant at α=0.05 level"
+  - [x] **Verification:** All 6 sections render correctly, holiday comparison table sortable and displays 4 holidays with 8 columns, statistical significance calculates using trip counts (not duration), Streamlit runs from Home.py at http://localhost:8501 without errors
+
+- [x] **Slice 12: Integration testing and documentation**
+  - [x] Run complete dbt build: `cd dbt && uv run dbt build --profiles-dir . --project-dir . --select mart_holiday_impact_summary mart_holiday_impact_by_station mart_holiday_impact_by_hour mart_holiday_impact_by_area`
+  - [x] All 4 models created successfully + 34 data tests passed (PASS=38 WARN=0 ERROR=0 SKIP=0)
+  - [x] Verify row counts:
+    - mart_holiday_impact_summary: 4 rows ✓ (as expected)
+    - mart_holiday_impact_by_station: 8,370 rows ✓ (4 holidays × ~2,093 stations)
+    - mart_holiday_impact_by_hour: 96 rows ✓ (4 holidays × 24 hours - perfect match)
+    - mart_holiday_impact_by_area: 36 rows ✓ (4 holidays × 9 areas - perfect match)
+  - [x] Dashboard tested and verified running at http://localhost:8501
+  - [x] Updated `CLAUDE.md`:
+    - Enhanced dim_stations documentation to mention lat/lon coordinates and area classification (Manhattan Financial, Manhattan Midtown, Brooklyn, etc.)
+    - Added 4 new mart models under "Marts" section with row count details
+    - Added example query for Memorial Day impact: `SELECT * FROM main_marts.mart_holiday_impact_summary WHERE holiday_name = 'Memorial Day'`
+    - Documented Holiday_Impact.py page under "Dashboard Pages" section with all 6 sections listed
+  - [x] README.md: File does not exist in project - skipped
+  - [x] **Verification:** Streamlit dashboard running successfully at http://localhost:8501, all 4 holiday mart models accessible via DuckDB, documentation updated in CLAUDE.md, end-to-end workflow verified from dbt build → dashboard visualization

@@ -2,18 +2,41 @@ version: 2
 
 models:
   - name: dim_stations
-    description: "Dimension table of all bike stations"
+    description: "Dimension table of all bike stations with geographic attributes"
     columns:
       - name: station_id
         description: "Unique station identifier"
         tests:
           - unique
           - not_null
-      
+
       - name: station_name
         description: "Name of the station"
         tests:
           - not_null
+
+      - name: name_variations
+        description: "Count of different name variations for this station in source data"
+
+      - name: latitude
+        description: "Station latitude coordinate (WGS84)"
+        tests:
+          - not_null
+
+      - name: longitude
+        description: "Station longitude coordinate (WGS84)"
+        tests:
+          - not_null
+
+      - name: area
+        description: "Geographic area classification (Manhattan neighborhoods, Brooklyn, Queens, Bronx, Jersey City, Other)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Manhattan - Financial', 'Manhattan - Midtown', 'Manhattan - Upper West',
+                         'Manhattan - Upper East', 'Manhattan - Downtown', 'Brooklyn', 'Queens',
+                         'Bronx', 'Jersey City', 'Other']
 
   - name: fct_trips_daily
     description: "Daily aggregated trip facts by member type"
@@ -41,4 +64,110 @@ models:
         description: "Average trip duration in minutes"
         tests:
           - not_null
+
+  - name: dim_stadiums
+    description: "Dimension table of MLB stadiums with geocoded coordinates"
+    columns:
+      - name: stadium_id
+        description: "Unique stadium identifier"
+        tests:
+          - unique
+          - not_null
+
+      - name: stadium_name
+        description: "Stadium name"
+        tests:
+          - not_null
+
+      - name: latitude
+        description: "Stadium latitude coordinate (WGS84)"
+        tests:
+          - not_null
+
+      - name: longitude
+        description: "Stadium longitude coordinate (WGS84)"
+        tests:
+          - not_null
+
+      - name: address
+        description: "Stadium street address"
+        tests:
+          - not_null
+
+      - name: city
+        description: "City where stadium is located"
+        tests:
+          - not_null
+
+      - name: state
+        description: "State where stadium is located"
+        tests:
+          - not_null
+
+  - name: fct_station_proximity
+    description: "Fact table of distances from stadiums to bike stations using Haversine formula"
+    columns:
+      - name: stadium_id
+        description: "Stadium identifier"
+        tests:
+          - not_null
+
+      - name: station_id
+        description: "Bike station identifier"
+        tests:
+          - not_null
+
+      - name: distance_km
+        description: "Distance in kilometers calculated using Haversine formula"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+      - name: within_1km
+        description: "Boolean flag for stations within 1km walking distance"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [true, false]
+
+  - name: dim_station_clusters
+    description: "K-means cluster assignments for bike stations (k=30)"
+    columns:
+      - name: station_id
+        description: "Unique station identifier"
+        tests:
+          - unique
+          - not_null
+
+      - name: station_name
+        description: "Name of the station"
+
+      - name: latitude
+        description: "Station latitude coordinate (WGS84)"
+
+      - name: longitude
+        description: "Station longitude coordinate (WGS84)"
+
+      - name: cluster_id
+        description: "K-means cluster assignment (0-29)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 29
+
+      - name: centroid_lat
+        description: "Latitude of cluster centroid"
+
+      - name: centroid_lon
+        description: "Longitude of cluster centroid"
+
+      - name: distance_from_centroid_km
+        description: "Distance from station to its cluster centroid in kilometers"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 5
 

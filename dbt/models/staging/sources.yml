@@ -3,7 +3,6 @@ version: 2
 sources:
   - name: raw_bike
     description: "Raw bike trip data ingested via dlt pipeline"
-    database: bike_ingestion
     schema: raw_bike
     tables:
       - name: bike_trips
@@ -71,7 +70,6 @@ sources:
 
   - name: raw_weather
     description: "Raw weather data ingested via dlt pipeline from Open-Meteo API"
-    database: weather_ingestion
     schema: raw_weather
     tables:
       - name: daily_weather
@@ -97,13 +95,12 @@ sources:
           
           - name: source_location
             description: "Latitude,longitude coordinates of weather station"
-          
+
           - name: _dlt_load_timestamp
             description: "DLT pipeline load timestamp"
-          
+
           - name: _dlt_load_id
             description: "DLT pipeline load batch identifier"
-          
+
           - name: _dlt_id
             description: "DLT unique record identifier"
-

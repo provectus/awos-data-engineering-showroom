@@ -1,5 +1,41 @@
 version: 2
 
+sources:
+  - name: raw_holidays
+    description: "Raw holiday data ingested from Nager.Date API"
+    schema: raw_holidays
+    tables:
+      - name: us_holidays
+        description: "US public holidays with intelligent date deduplication"
+        columns:
+          - name: date
+            description: "Holiday date (primary key)"
+            tests:
+              - unique
+              - not_null
+          - name: holiday_name
+            description: "Holiday name (concatenated with 'and' for same-date holidays)"
+          - name: country_code
+            description: "Country code (US)"
+          - name: holiday_types
+            description: "Comma-separated list of holiday types (Public, Federal, etc.)"
+
+  - name: raw_games
+    description: "Raw MLB game data ingested from MLB Stats API"
+    schema: raw_games
+    tables:
+      - name: mlb_games
+        description: "NY Yankees and NY Mets home game schedules"
+        columns:
+          - name: game_id
+            description: "Unique game identifier (MLB gamePk)"
+          - name: game_date
+            description: "Game date (YYYY-MM-DD)"
+          - name: game_datetime
+            description: "Game start datetime (UTC)"
+          - name: venue_name
+            description: "Stadium name"
+
 models:
   - name: stg_bike_trips
     description: "Cleaned and normalized bike trip data from raw ingestion"
@@ -71,3 +107,81 @@ models:
           - dbt_utils.expression_is_true:
               expression: ">= 0"
 
+  - name: stg_holidays
+    description: "Cleaned and enriched US holiday data from Nager.Date API with derived flags"
+    columns:
+      - name: date
+        description: "Holiday date (unique per day)"
+        tests:
+          - unique
+          - not_null
+
+      - name: holiday_name
+        description: "Holiday name (may contain multiple names joined with 'and' for same-date holidays)"
+        tests:
+          - not_null
+
+      - name: country_code
+        description: "Country code (always US)"
+        tests:
+          - accepted_values:
+              values: ['US']
+
+      - name: is_major
+        description: "Whether this is a major holiday (Public or Federal type)"
+        tests:
+          - not_null
+
+      - name: is_working_day
+        description: "Whether this is a working day (inverse of is_major)"
+        tests:
+          - not_null
+
+      - name: holiday_types
+        description: "Comma-separated list of holiday types (Public, Federal, Optional, etc.)"
+
+  - name: stg_games
+    description: "Cleaned and enriched MLB game data for NY Yankees and NY Mets home games"
+    columns:
+      - name: game_id
+        description: "Unique game identifier (MLB gamePk)"
+        tests:
+          - unique
+          - not_null
+
+      - name: game_date
+        description: "Game date (derived from rounded game_datetime)"
+        tests:
+          - not_null
+
+      - name: game_datetime_rounded
+        description: "Game start datetime rounded to nearest hour (timestamp type)"
+        tests:
+          - not_null
+
+      - name: game_datetime_original
+        description: "Original game start datetime from API (timestamp type)"
+        tests:
+          - not_null
+
+      - name: stadium_name
+        description: "Standardized stadium name"
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Yankee Stadium', 'Citi Field', 'London Stadium']
+
+      - name: is_yankees_home
+        description: "Boolean flag for Yankees home games"
+        tests:
+          - not_null
+
+      - name: is_mets_home
+        description: "Boolean flag for Mets home games"
+        tests:
+          - not_null
+
+      - name: estimated_end_datetime
+        description: "Estimated game end time (game_datetime + 3 hours)"
+        tests:
+          - not_null

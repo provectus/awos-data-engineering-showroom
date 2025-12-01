@@ -117,3 +117,318 @@ models:
 
       - name: member_pct
         description: Percentage of member trips starting from this station
+
+  - name: mart_holiday_impact_summary
+    description: Citywide holiday impact analysis comparing holiday demand to baseline weekdays
+    columns:
+      - name: holiday_date
+        description: Date of the holiday
+        tests:
+          - unique
+          - not_null
+
+      - name: holiday_name
+        description: Name of the holiday
+        tests:
+          - not_null
+
+      - name: is_major
+        description: Whether this is a major holiday
+        tests:
+          - not_null
+
+      - name: is_working_day
+        description: Whether this holiday is a working day
+        tests:
+          - not_null
+
+      - name: baseline_days_count
+        description: Number of baseline weekdays used for comparison
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 30
+
+      - name: total_trips_holiday
+        description: Total number of trips on the holiday
+        tests:
+          - not_null
+
+      - name: total_trips_baseline
+        description: Average daily trips on baseline weekdays
+        tests:
+          - not_null
+
+  - name: mart_holiday_impact_by_station
+    description: Station-level holiday impact analysis showing demand changes at each station
+    columns:
+      - name: holiday_date
+        description: Date of the holiday
+        tests:
+          - not_null
+
+      - name: holiday_name
+        description: Name of the holiday
+        tests:
+          - not_null
+
+      - name: station_id
+        description: Unique identifier for the station
+        tests:
+          - not_null
+
+      - name: station_name
+        description: Name of the station
+        tests:
+          - not_null
+
+      - name: area
+        description: Geographic area/neighborhood of the station
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - Manhattan - Financial
+                - Manhattan - Midtown
+                - Manhattan - Upper West
+                - Manhattan - Upper East
+                - Manhattan - Downtown
+                - Brooklyn
+                - Queens
+                - Bronx
+                - Jersey City
+                - Other
+
+      - name: latitude
+        description: Station latitude coordinate
+        tests:
+          - not_null
+
+      - name: longitude
+        description: Station longitude coordinate
+        tests:
+          - not_null
+
+      - name: trips_holiday
+        description: Number of trips from this station on the holiday
+        tests:
+          - not_null
+
+      - name: trips_baseline
+        description: Average daily trips from this station on baseline weekdays
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - holiday_date
+            - station_id
+
+  - name: mart_holiday_impact_by_hour
+    description: Hourly demand patterns on holidays compared to baseline weekdays
+    columns:
+      - name: holiday_date
+        description: Date of the holiday
+        tests:
+          - not_null
+
+      - name: holiday_name
+        description: Name of the holiday
+        tests:
+          - not_null
+
+      - name: hour_of_day
+        description: Hour of day (0-23)
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              max_value: 23
+
+      - name: trips_holiday
+        description: Number of trips during this hour on the holiday
+        tests:
+          - not_null
+
+      - name: trips_baseline
+        description: Average trips during this hour on baseline weekdays
+        tests:
+          - not_null
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - holiday_date
+            - hour_of_day
+
+  - name: mart_holiday_impact_by_area
+    description: Geographic area-level holiday impact analysis for operational planning
+    columns:
+      - name: holiday_date
+        description: Date of the holiday
+        tests:
+          - not_null
+
+      - name: holiday_name
+        description: Name of the holiday
+        tests:
+          - not_null
+
+      - name: area_name
+        description: Geographic area/neighborhood name
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - Manhattan - Financial
+                - Manhattan - Midtown
+                - Manhattan - Upper West
+                - Manhattan - Upper East
+                - Manhattan - Downtown
+                - Brooklyn
+                - Queens
+                - Bronx
+                - Jersey City
+                - Other
+
+      - name: station_count
+        description: Number of stations in this area
+        tests:
+          - not_null
+
+      - name: trips_holiday
+        description: Total trips in this area on the holiday
+        tests:
+          - not_null
+
+      - name: trips_baseline
+        description: Average daily trips in this area on baseline weekdays
+        tests:
+          - not_null
+
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - holiday_date
+            - area_name
+
+  - name: mart_game_day_demand
+    description: "Game day bike demand analysis comparing game days vs baseline"
+    columns:
+      - name: game_id
+        description: "Unique game identifier"
+        tests:
+          - not_null
+
+      - name: station_id
+        description: "Station identifier"
+        tests:
+          - not_null
+
+      - name: hour_offset
+        description: "Hour relative to game start (-3 to +3)"
+        tests:
+          - not_null
+
+      - name: trips_started_game_day
+        description: "Trips started on game day"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+      - name: trips_ended_game_day
+        description: "Trips ended on game day"
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: ">= 0"
+
+  - name: mart_game_rebalancing
+    description: "Rebalancing recommendations for game days based on demand patterns"
+    columns:
+      - name: stadium_name
+        description: "Stadium name"
+        tests:
+          - not_null
+
+      - name: station_id
+        description: "Station identifier"
+        tests:
+          - not_null
+
+      - name: bikes_to_add_or_remove
+        description: "Number of bikes to add (positive) or remove (negative)"
+        tests:
+          - not_null
+
+      - name: rebalancing_recommendation
+        description: "Text recommendation for rebalancing"
+        tests:
+          - not_null
+
+  - name: mart_baseline_net_flow
+    description: "Historical baseline net flow by cluster, day-of-week, and hour for demand forecasting"
+    columns:
+      - name: cluster_id
+        description: "Cluster identifier (0-29)"
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_station_clusters')
+              field: cluster_id
+
+      - name: day_of_week
+        description: "Day of week (0=Sunday, 6=Saturday)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1, 2, 3, 4, 5, 6]
+
+      - name: hour
+        description: "Hour of day (0-23)"
+        tests:
+          - not_null
+          - accepted_values:
+              values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+
+      - name: trips_started
+        description: "Total trips started (bikes leaving cluster)"
+        tests:
+          - not_null
+
+      - name: trips_ended
+        description: "Total trips ended (bikes arriving to cluster)"
+        tests:
+          - not_null
+
+      - name: net_flow
+        description: "Net flow (trips_ended - trips_started). Negative = add bikes, Positive = remove bikes"
+        tests:
+          - not_null
+
+  - name: mart_adjustment_factors
+    description: "Historical adjustment factors for weather and holiday impacts on demand"
+    columns:
+      - name: factor_name
+        description: "Factor identifier (hot_weather, rain, major_holiday, etc.)"
+        tests:
+          - not_null
+          - unique
+          - accepted_values:
+              values: ['hot_weather', 'warm_weather', 'neutral_weather', 'cold_weather', 'light_rain', 'heavy_rain', 'weak_wind', 'strong_wind', 'major_holiday', 'minor_holiday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+
+      - name: description
+        description: "Human-readable description of the factor"
+        tests:
+          - not_null
+
+      - name: impact_pct
+        description: "Historical impact percentage (e.g., -20 means 20% decrease)"
+        tests:
+          - not_null
+
+      - name: adjustment_multiplier
+        description: "Multiplicative factor (1 + impact_pct/100)"
+        tests:
+          - not_null

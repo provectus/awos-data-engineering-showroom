@@ -5,8 +5,10 @@ from the Open-Meteo API into a DuckDB data warehouse.
 """
 
 import logging
+import os
 from collections.abc import Iterator
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import dlt
@@ -14,6 +16,9 @@ import requests
 
 
 logger = logging.getLogger(__name__)
+
+# Set dlt project directory to find .dlt config folder
+os.environ["DLT_PROJECT_DIR"] = str(Path(__file__).parent)
 
 
 @dlt.resource(

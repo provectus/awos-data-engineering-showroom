@@ -17,16 +17,16 @@ This task list follows a **vertical slicing** methodology where each main task r
 
 Set up the basic holiday data pipeline to fetch and store holiday data, verifying the data is accessible in DuckDB.
 
-- [ ] Create `dlt_pipeline/holidays.py` with basic structure:
-  - [ ] Sub-task: Define `@dlt.resource` function that fetches US holidays from Nager.Date API for 2024 and 2025
-  - [ ] Sub-task: Implement filtering logic to include only nationwide holidays OR NY-specific holidays
-  - [ ] Sub-task: Configure dlt pipeline with `merge` write disposition, primary key `date`, output to `duckdb/holiday_ingestion.duckdb`
-  - [ ] Sub-task: Add error handling (try-except blocks, retry logic with 3 attempts, timeout 30s)
-  - [ ] Sub-task: Add logging at INFO level for pipeline progress
-  - [ ] Sub-task: Create `run_holiday_pipeline()` function and `if __name__ == "__main__"` block for manual execution
-- [ ] Test the pipeline runs successfully:
-  - [ ] Sub-task: Execute `uv run python dlt_pipeline/holidays.py`
-  - [ ] Sub-task: Verify data exists in `duckdb/holiday_ingestion.duckdb` using DuckDB CLI or Python query (expect ~30-40 holidays)
+- [x] Create `dlt_pipeline/holidays.py` with basic structure:
+  - [x] Sub-task: Define `@dlt.resource` function that fetches US holidays from Nager.Date API for 2024 and 2025
+  - [x] Sub-task: Implement filtering logic to include only nationwide holidays OR NY-specific holidays
+  - [x] Sub-task: Configure dlt pipeline with `merge` write disposition, primary key `date`, output to `duckdb/holiday_ingestion.duckdb`
+  - [x] Sub-task: Add error handling (try-except blocks, retry logic with 3 attempts, timeout 30s)
+  - [x] Sub-task: Add logging at INFO level for pipeline progress
+  - [x] Sub-task: Create `run_holiday_pipeline()` function and `if __name__ == "__main__"` block for manual execution
+- [x] Test the pipeline runs successfully:
+  - [x] Sub-task: Execute `uv run python dlt_pipeline/holidays.py`
+  - [x] Sub-task: Verify data exists in `duckdb/holiday_ingestion.duckdb` using DuckDB CLI or Python query (expect ~30-40 holidays)
 
 **Validation:** Pipeline runs without errors and creates `holiday_ingestion.duckdb` with holiday data.
 
@@ -36,15 +36,15 @@ Set up the basic holiday data pipeline to fetch and store holiday data, verifyin
 
 Create the dbt staging model to clean and standardize raw holiday data, making it queryable.
 
-- [ ] Create dbt staging model for holidays:
-  - [ ] Sub-task: Create `dbt/models/staging/stg_holidays.sql` that selects from `{{ source('raw_holidays', 'us_holidays') }}`
-  - [ ] Sub-task: Add transformations: cast `date` to DATE, cast booleans, trim whitespace, handle NULLs in `counties`
-  - [ ] Sub-task: Set materialization to `view` in model config
-  - [ ] Sub-task: Add source definition in `dbt/models/staging/sources.yml` (or update existing) for `raw_holidays.us_holidays`
-- [ ] Add dbt tests for staging model:
-  - [ ] Sub-task: Update `dbt/models/staging/schema.yml` with tests: `date` (unique, not_null), `is_nationwide` (not_null, accepted_values), `is_fixed` (not_null, accepted_values), `holiday_name` (not_null)
-  - [ ] Sub-task: Run `cd dbt && uv run dbt build --select stg_holidays`
-  - [ ] Sub-task: Verify staging model created and tests pass
+- [x] Create dbt staging model for holidays:
+  - [x] Sub-task: Create `dbt/models/staging/stg_holidays.sql` that selects from `{{ source('raw_holidays', 'us_holidays') }}`
+  - [x] Sub-task: Add transformations: cast `date` to DATE, cast booleans, trim whitespace, handle NULLs in `counties`
+  - [x] Sub-task: Set materialization to `view` in model config
+  - [x] Sub-task: Add source definition in `dbt/models/staging/sources.yml` (or update existing) for `raw_holidays.us_holidays`
+- [x] Add dbt tests for staging model:
+  - [x] Sub-task: Update `dbt/models/staging/schema.yml` with tests: `date` (unique, not_null), `is_nationwide` (not_null, accepted_values), `is_fixed` (not_null, accepted_values), `holiday_name` (not_null)
+  - [x] Sub-task: Run `cd dbt && uv run dbt build --select stg_holidays`
+  - [x] Sub-task: Verify staging model created and tests pass
 
 **Validation:** `stg_holidays` view exists and passes all dbt tests. Can query holidays via dbt.
 
@@ -54,19 +54,19 @@ Create the dbt staging model to clean and standardize raw holiday data, making i
 
 Create the analytics mart that joins holidays to bike trip data, enabling basic holiday analysis (raw trip counts only, no weather adjustment yet).
 
-- [ ] Create `mart_holiday_analysis` with basic functionality:
-  - [ ] Sub-task: Create `dbt/models/marts/mart_holiday_analysis.sql`
-  - [ ] Sub-task: LEFT JOIN `mart_demand_daily` with `stg_holidays` on `ride_date = date`
-  - [ ] Sub-task: Add computed columns: `is_holiday`, `holiday_name`, `holiday_category` (derived from `holiday_types`), `trips_total`, `tmax`, `precip`, `day_type`
-  - [ ] Sub-task: Calculate `baseline_daily_trips` as AVG of non-holiday trips
-  - [ ] Sub-task: Calculate `demand_vs_baseline_pct` using raw trip counts
-  - [ ] Sub-task: Set materialization to `table` for query performance
-  - [ ] Sub-task: Add placeholder column `trips_weather_adjusted` (initially equals `trips_total` - we'll implement normalization in next slice)
-- [ ] Add dbt tests for mart:
-  - [ ] Sub-task: Update `dbt/models/marts/schema.yml` with tests: `ride_date` (unique, not_null), `is_holiday` (not_null, accepted_values), `demand_vs_baseline_pct` (accepted_range -100 to 500)
-  - [ ] Sub-task: Add row count test: verify `mart_holiday_analysis` has same row count as `mart_demand_daily` (LEFT JOIN preservation)
-  - [ ] Sub-task: Run `cd dbt && uv run dbt build --select mart_holiday_analysis`
-  - [ ] Sub-task: Verify mart table created and tests pass
+- [x] Create `mart_holiday_analysis` with basic functionality:
+  - [x] Sub-task: Create `dbt/models/marts/mart_holiday_analysis.sql`
+  - [x] Sub-task: LEFT JOIN `mart_demand_daily` with `stg_holidays` on `ride_date = date`
+  - [x] Sub-task: Add computed columns: `is_holiday`, `holiday_name`, `holiday_category` (derived from `holiday_types`), `trips_total`, `tmax`, `precip`, `day_type`
+  - [x] Sub-task: Calculate `baseline_daily_trips` as AVG of non-holiday trips
+  - [x] Sub-task: Calculate `demand_vs_baseline_pct` using raw trip counts
+  - [x] Sub-task: Set materialization to `table` for query performance
+  - [x] Sub-task: Add placeholder column `trips_weather_adjusted` (initially equals `trips_total` - we'll implement normalization in next slice)
+- [x] Add dbt tests for mart:
+  - [x] Sub-task: Update `dbt/models/marts/schema.yml` with tests: `ride_date` (unique, not_null), `is_holiday` (not_null, accepted_values), `demand_vs_baseline_pct` (accepted_range -100 to 500)
+  - [x] Sub-task: Add row count test: verify `mart_holiday_analysis` has same row count as `mart_demand_daily` (LEFT JOIN preservation)
+  - [x] Sub-task: Run `cd dbt && uv run dbt build --select mart_holiday_analysis`
+  - [x] Sub-task: Verify mart table created and tests pass
 
 **Validation:** `mart_holiday_analysis` table exists, joins work correctly, basic metrics are calculated. Weather normalization is placeholder for now.
 
@@ -76,12 +76,12 @@ Create the analytics mart that joins holidays to bike trip data, enabling basic 
 
 Enhance the mart with weather-adjusted demand calculations.
 
-- [ ] Implement weather normalization in `mart_holiday_analysis`:
-  - [ ] Sub-task: Review `mart_weather_effect.sql` for existing weather normalization patterns
-  - [ ] Sub-task: Update `mart_holiday_analysis.sql` to calculate `trips_weather_adjusted` using temperature and precipitation effects (formula: `trips_total * (avg_weather_factor / actual_weather_factor)`)
-  - [ ] Sub-task: Update `demand_vs_baseline_pct` to use weather-adjusted trips for comparison
-  - [ ] Sub-task: Run `cd dbt && uv run dbt build --select mart_holiday_analysis`
-  - [ ] Sub-task: Validate: Query mart to compare raw vs. adjusted trips for a known holiday (e.g., Memorial Day) - adjusted should differ based on weather
+- [x] Implement weather normalization in `mart_holiday_analysis`:
+  - [x] Sub-task: Review `mart_weather_effect.sql` for existing weather normalization patterns
+  - [x] Sub-task: Update `mart_holiday_analysis.sql` to calculate `trips_weather_adjusted` using temperature and precipitation effects (formula: `trips_total * (avg_weather_factor / actual_weather_factor)`)
+  - [x] Sub-task: Update `demand_vs_baseline_pct` to use weather-adjusted trips for comparison
+  - [x] Sub-task: Run `cd dbt && uv run dbt build --select mart_holiday_analysis`
+  - [x] Sub-task: Validate: Query mart to compare raw vs. adjusted trips for a known holiday (e.g., Memorial Day) - adjusted should differ based on weather
 
 **Validation:** Weather-adjusted metrics are calculated correctly. Both raw and adjusted trip counts are available in the mart.
 
@@ -91,17 +91,17 @@ Enhance the mart with weather-adjusted demand calculations.
 
 Create the Holiday Impact page in Streamlit with basic structure, data connection, and the limited data banner.
 
-- [ ] Create basic dashboard page structure:
-  - [ ] Sub-task: Create `streamlit_app/pages/Holiday_Impact.py` with page config (title, icon 🎉, wide layout)
-  - [ ] Sub-task: Add database connection using `duckdb.connect("duckdb/warehouse.duckdb", read_only=True)` with `@st.cache_resource`
-  - [ ] Sub-task: Create cached query function `@st.cache_data(ttl=600)` to load `mart_holiday_analysis` data
-  - [ ] Sub-task: Add data validation logic: count unique holidays with trip data
-  - [ ] Sub-task: Display banner if `<2 holidays`: "⚠️ Limited historical data available. Insights will strengthen as more data accumulates over time."
-  - [ ] Sub-task: Add page title: "Holiday Impact Analysis"
-- [ ] Test page loads:
-  - [ ] Sub-task: Run `uv run streamlit run streamlit_app/Home.py`
-  - [ ] Sub-task: Navigate to "Holiday Impact" in sidebar
-  - [ ] Sub-task: Verify page loads in <3 seconds and banner displays
+- [x] Create basic dashboard page structure:
+  - [x] Sub-task: Create `streamlit_app/pages/Holiday_Impact.py` with page config (title, icon 🎉, wide layout)
+  - [x] Sub-task: Add database connection using `duckdb.connect("duckdb/warehouse.duckdb", read_only=True)` with `@st.cache_resource`
+  - [x] Sub-task: Create cached query function `@st.cache_data(ttl=600)` to load `mart_holiday_analysis` data
+  - [x] Sub-task: Add data validation logic: count unique holidays with trip data
+  - [x] Sub-task: Display banner if `<2 holidays`: "⚠️ Limited historical data available. Insights will strengthen as more data accumulates over time."
+  - [x] Sub-task: Add page title: "Holiday Impact Analysis"
+- [x] Test page loads:
+  - [x] Sub-task: Run `uv run streamlit run streamlit_app/Home.py`
+  - [x] Sub-task: Navigate to "Holiday Impact" in sidebar
+  - [x] Sub-task: Verify page loads in <3 seconds and banner displays
 
 **Validation:** Dashboard page is accessible, connects to database, displays banner, and loads quickly.
 
@@ -111,17 +111,17 @@ Create the Holiday Impact page in Streamlit with basic structure, data connectio
 
 Add the bar chart comparing average demand on holidays vs. non-holidays.
 
-- [ ] Implement demand comparison bar chart:
-  - [ ] Sub-task: Write SQL query to calculate average weather-adjusted demand by `holiday_category` (Federal, Observance, Non-Holiday Baseline)
-  - [ ] Sub-task: Calculate percentage change vs. baseline for each category
-  - [ ] Sub-task: Create Plotly grouped bar chart (`px.bar`) with holiday categories on X-axis, avg demand on Y-axis
-  - [ ] Sub-task: Add percentage change labels on each bar
-  - [ ] Sub-task: Add hover tooltips showing: exact trip count, number of holidays, date range
-  - [ ] Sub-task: Use distinct colors for each category (blue for Federal, orange for State, gray for baseline)
-  - [ ] Sub-task: Add chart to dashboard page with section header
-- [ ] Test visualization:
-  - [ ] Sub-task: Refresh dashboard and verify chart displays correctly
-  - [ ] Sub-task: Hover over bars to verify tooltips show correct data
+- [x] Implement demand comparison bar chart:
+  - [x] Sub-task: Write SQL query to calculate average weather-adjusted demand by `holiday_category` (Federal, Observance, Non-Holiday Baseline)
+  - [x] Sub-task: Calculate percentage change vs. baseline for each category
+  - [x] Sub-task: Create Plotly grouped bar chart (`px.bar`) with holiday categories on X-axis, avg demand on Y-axis
+  - [x] Sub-task: Add percentage change labels on each bar
+  - [x] Sub-task: Add hover tooltips showing: exact trip count, number of holidays, date range
+  - [x] Sub-task: Use distinct colors for each category (blue for Federal, orange for State, gray for baseline)
+  - [x] Sub-task: Add chart to dashboard page with section header
+- [x] Test visualization:
+  - [x] Sub-task: Refresh dashboard and verify chart displays correctly
+  - [x] Sub-task: Hover over bars to verify tooltips show correct data
 
 **Validation:** Bar chart displays with 3 bars, percentage labels, and interactive tooltips. Data matches expected values from mart.
 
@@ -131,19 +131,19 @@ Add the bar chart comparing average demand on holidays vs. non-holidays.
 
 Add the calendar view with demand overlay and holiday highlighting.
 
-- [ ] Implement calendar heatmap:
-  - [ ] Sub-task: Write SQL query to get all dates for 2024 with `is_holiday`, `holiday_name`, `trips_total`, data status
-  - [ ] Sub-task: Create Plotly heatmap or custom grid layout for 12-month calendar view
-  - [ ] Sub-task: Set cell background color intensity based on `trips_total` (darker = higher demand)
-  - [ ] Sub-task: Add distinct border or icon for holiday dates
-  - [ ] Sub-task: Display holiday names as text labels on holiday cells
-  - [ ] Sub-task: Show "No Data" indicator (gray cells) where `trips_total IS NULL`
-  - [ ] Sub-task: Add color scale legend ("Low Demand" → "High Demand")
-  - [ ] Sub-task: Add calendar to dashboard page with section header
-- [ ] Test visualization:
-  - [ ] Sub-task: Verify calendar displays full year 2024
-  - [ ] Sub-task: Verify holidays are visually distinct and labeled
-  - [ ] Sub-task: Verify color intensity varies with demand levels
+- [x] Implement calendar heatmap:
+  - [x] Sub-task: Write SQL query to get all dates for 2024 with `is_holiday`, `holiday_name`, `trips_total`, data status
+  - [x] Sub-task: Create Plotly heatmap or custom grid layout for 12-month calendar view
+  - [x] Sub-task: Set cell background color intensity based on `trips_total` (darker = higher demand)
+  - [x] Sub-task: Add distinct border or icon for holiday dates
+  - [x] Sub-task: Display holiday names as text labels on holiday cells
+  - [x] Sub-task: Show "No Data" indicator (gray cells) where `trips_total IS NULL`
+  - [x] Sub-task: Add color scale legend ("Low Demand" → "High Demand")
+  - [x] Sub-task: Add calendar to dashboard page with section header
+- [x] Test visualization:
+  - [x] Sub-task: Verify calendar displays full year 2024
+  - [x] Sub-task: Verify holidays are visually distinct and labeled
+  - [x] Sub-task: Verify color intensity varies with demand levels
 
 **Validation:** Calendar heatmap displays 2024, highlights holidays with borders/icons, shows holiday names, color-codes demand levels, and handles no-data gracefully.
 
@@ -288,9 +288,9 @@ Update documentation and add final touches to prepare for deployment.
 ## Progress Tracking
 
 **Total Slices:** 13
-**Completed:** 0
+**Completed:** 7
 **In Progress:** 0
-**Remaining:** 13
+**Remaining:** 6
 
 ---
 
