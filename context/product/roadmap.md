@@ -53,15 +53,14 @@ _Make insights accessible and actionable through dashboards._
 
 ---
 
-### Phase 4: Fleet Health & Continuous Data (Future)
+### Phase 4: Pipeline Orchestration & Continuous Data (Future)
 
-_Detect problematic bikes early and enable continuous data ingestion beyond the initial dataset._
+_Ensure end-to-end pipeline orchestration and enable continuous data ingestion beyond the initial dataset._
 
-- [ ] **Problematic Bike Detection**
-  - [ ] **Very Short Trips:** Flag bikes with trips under 90 seconds as potential mechanical issues (rider immediately returns bike)
-  - [ ] **Lack of Usage:** Identify bikes that remain at the same station for more than 2 days without being rented
-  - [ ] **Station Teleportation:** Detect bikes where the end station of one trip doesn't match the start station of the next trip, indicating maintenance staff moved it (potentially for repair)
-  - [ ] **Bike Health Dashboard:** Display flagged bikes with issue type, last known location, and days since last valid trip
+- [ ] **Airflow Orchestration Integration**
+  - [ ] **Data Ingestion DAG:** Verify and enhance Airflow tasks for all dlt pipelines (bike, weather, holidays, games) with proper error handling
+  - [ ] **dbt Execution DAG:** Integrate dbt build and test execution into Airflow workflows with proper dependency management
+  - [ ] **End-to-End Pipeline Validation:** Ensure complete pipeline runs successfully from ingestion through transformation to dashboard-ready data
 
 - [ ] **Continuous Data Pipeline**
   - [ ] **Dynamic Date Ranges:** Remove hardcoded May-June 2024 dates from dbt models to support multi-year data
@@ -71,18 +70,15 @@ _Detect problematic bikes early and enable continuous data ingestion beyond the 
 
 ---
 
-### Phase 5: Data Quality & Orchestration Enhancement (Future)
+### Phase 5: Data Quality Enhancement (Future)
 
-_Strengthen data reliability and pipeline automation for production readiness._
+_Strengthen data reliability and quality monitoring for production readiness._
 
 - [ ] **Enhanced Data Quality Checks**
   - [ ] **Expanded dbt Tests:** Add comprehensive data quality tests in dbt models (schema validation, referential integrity, null checks)
   - [ ] **Great Expectations Review & Enhancement:** Review existing bike data validation setup and adopt/fix if needed; extend test suites to cover holiday and event data validation
-
-- [ ] **Airflow Orchestration Integration**
-  - [ ] **Data Quality DAGs:** Create Airflow tasks to run Great Expectations checkpoints alongside existing data pipelines
-  - [ ] **dbt Test Integration:** Integrate dbt test execution into Airflow workflows with proper dependency management
-  - [ ] **Quality Monitoring Dashboard:** Track data quality metrics and test results over time in Airflow UI
+  - [ ] **Data Quality DAG:** Create Airflow tasks to run Great Expectations checkpoints alongside existing data pipelines
+  - [ ] **Quality Monitoring Dashboard:** Track data quality metrics and test results over time in Streamlit or Airflow UI
 
 ---
 
