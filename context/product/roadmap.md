@@ -27,7 +27,7 @@ _Build the core data infrastructure for holiday and event analysis._
 
 ---
 
-### Phase 2: Predictive Intelligence (V2 - High Value) 🔄 **IN PROGRESS**
+### Phase 2: Predictive Intelligence (V2 - High Value) ✅ **100% COMPLETE**
 
 _Enable forecasting and scenario modeling for operations planning._
 
@@ -38,32 +38,40 @@ _Enable forecasting and scenario modeling for operations planning._
   - [x] **Factor-Based Forecasting:** Multiplicative forecast model: `adjusted_net_flow = baseline × day_factor × temp_factor × wind_factor × rain_factor × holiday_factor`
   - [x] **24-Hour Prediction Dashboard:** Interactive Streamlit dashboard with forecast chart, rebalancing recommendations, cluster map, and station list
   - [x] **Rebalancing Recommendations:** Actionable hourly guidance (Add/Remove bikes) with 3-bike threshold logic matching game rebalancing patterns
-
-- [ ] **"What-If" Scenario Modeling**
-  - [ ] **Scenario Builder Tool:** Allow users to model hypothetical situations (e.g., "Yankees game + rain + Saturday")
-  - [ ] **Interactive Demand Forecasts:** Display predicted demand impact based on user-defined scenarios
-  - [ ] **Rebalancing Recommendations:** Suggest which stations need bikes added/removed based on scenarios
+  - [x] **What-If Scenario Capability:** Built into forecast dashboard via 6 input controls allowing users to model any combination of day, weather, and holiday conditions
 
 ---
 
-### Phase 3: Visualization & User Experience (V2 - Essential)
+### Phase 3: Visualization & User Experience (V2 - Essential) ✅ **100% COMPLETE**
 
 _Make insights accessible and actionable through dashboards._
 
-- [x] **Enhanced Analytics Dashboards** ✅ **MOSTLY COMPLETED**
+- [x] **Enhanced Analytics Dashboards** ✅ **COMPLETED**
   - [x] **Holiday Impact Dashboard:** Visualize demand patterns during holidays with historical comparisons (citywide summary, station-level heatmaps, hourly patterns, geographic distribution)
   - [x] **Game Impact Dashboard:** Interactive rebalancing calculator with demand analysis and station proximity maps for Yankees/Mets games
   - [x] **Demand Forecast Dashboard:** Interactive 24-hour forecast interface with 6 input controls (day, temperature, wind, rain, holiday, cluster), forecast chart, rebalancing recommendations table, cluster map visualization, and station list
-  - [ ] **Event Calendar View:** Display upcoming events overlaid with predicted demand by station
-  - [ ] **What-If Scenario Dashboard:** Interactive interface for testing scenarios and viewing forecasts
-
-- [ ] **Forecast Accuracy Tracking**
-  - [ ] **Prediction vs. Actual:** Monitor and display forecast accuracy metrics over time
-  - [ ] **Model Performance Dashboard:** Track which factors (weather, events, holidays) drive best predictions
 
 ---
 
-### Phase 4: Data Quality & Orchestration Enhancement (Future)
+### Phase 4: Fleet Health & Continuous Data (Future)
+
+_Detect problematic bikes early and enable continuous data ingestion beyond the initial dataset._
+
+- [ ] **Problematic Bike Detection**
+  - [ ] **Very Short Trips:** Flag bikes with trips under 90 seconds as potential mechanical issues (rider immediately returns bike)
+  - [ ] **Lack of Usage:** Identify bikes that remain at the same station for more than 2 days without being rented
+  - [ ] **Station Teleportation:** Detect bikes where the end station of one trip doesn't match the start station of the next trip, indicating maintenance staff moved it (potentially for repair)
+  - [ ] **Bike Health Dashboard:** Display flagged bikes with issue type, last known location, and days since last valid trip
+
+- [ ] **Continuous Data Pipeline**
+  - [ ] **Dynamic Date Ranges:** Remove hardcoded May-June 2024 dates from dbt models to support multi-year data
+  - [ ] **Automated Data Refresh:** Update Airflow DAGs to fetch latest bike trip data on a scheduled basis (daily/weekly)
+  - [ ] **Incremental Loading:** Configure dlt pipelines for incremental data ingestion (append new trips, avoid full reloads)
+  - [ ] **Historical Data Expansion:** Backfill historical data beyond May-June 2024 for richer trend analysis
+
+---
+
+### Phase 5: Data Quality & Orchestration Enhancement (Future)
 
 _Strengthen data reliability and pipeline automation for production readiness._
 
@@ -75,3 +83,13 @@ _Strengthen data reliability and pipeline automation for production readiness._
   - [ ] **Data Quality DAGs:** Create Airflow tasks to run Great Expectations checkpoints alongside existing data pipelines
   - [ ] **dbt Test Integration:** Integrate dbt test execution into Airflow workflows with proper dependency management
   - [ ] **Quality Monitoring Dashboard:** Track data quality metrics and test results over time in Airflow UI
+
+---
+
+### Phase 6: Model Performance & Analytics (Future)
+
+_Track and improve forecasting model performance over time._
+
+- [ ] **Forecast Accuracy Tracking**
+  - [ ] **Prediction vs. Actual:** Monitor and display forecast accuracy metrics over time
+  - [ ] **Model Performance Dashboard:** Track which factors (weather, events, holidays) drive best predictions
