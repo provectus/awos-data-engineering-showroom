@@ -169,7 +169,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['Yankee Stadium', 'Citi Field', 'London Stadium']
+              values: ['Yankee Stadium', 'Citi Field', 'London Stadium', 'Journey Bank Ballpark']
 
       - name: is_yankees_home
         description: "Boolean flag for Yankees home games"

@@ -1,7 +1,7 @@
 # Tasks: Dynamic Date Ranges in dbt Models
 
 **Spec:** 006-dynamic-date-ranges
-**Status:** In Progress
+**Status:** ✅ COMPLETED
 
 ---
 
@@ -30,31 +30,32 @@
 
 ---
 
-## Slice 3: Remove date filters from game day demand model
+## Slice 3: Remove date filters from game day demand model ✅
 
 **Goal:** Update the game day demand model to use all available game data. This model has TWO date filters that must both be removed.
 
-- [ ] Remove `where game_date between '2024-05-01' and '2024-06-30'` from `games` CTE in `mart_game_day_demand.sql` (line 21) - keep stadium filter
-- [ ] Remove `and t.ride_date between '2024-05-01' and '2024-06-30'` from `baseline_demand` CTE in `mart_game_day_demand.sql` (line 111)
-- [ ] Run `dbt build --select mart_game_day_demand mart_game_rebalancing` - verify both models build
-- [ ] Verify Game Impact dashboard loads correctly
+- [x] Remove `where game_date between '2024-05-01' and '2024-06-30'` from `games` CTE in `mart_game_day_demand.sql` (line 21) - keep stadium filter
+- [x] Remove `and t.ride_date between '2024-05-01' and '2024-06-30'` from `baseline_demand` CTE in `mart_game_day_demand.sql` (line 111)
+- [x] Run `dbt build --select mart_game_day_demand mart_game_rebalancing` - verify both models build
+- [x] Verify Game Impact dashboard loads correctly
 
 ---
 
-## Slice 4: Final validation and documentation
+## Slice 4: Final validation and documentation ✅
 
 **Goal:** End-to-end validation and roadmap update.
 
-- [ ] Run full `dbt build` to ensure all models work together
-- [ ] Run `dbt test` to verify data quality tests pass
-- [ ] **[MANUAL]** Verify Holiday Impact dashboard shows all expected data
-- [ ] **[MANUAL]** Verify Game Impact dashboard shows all expected data
-- [ ] Update `context/product/roadmap.md` to mark "Dynamic Date Ranges" as completed in Phase 4
+- [x] Run full `dbt build` to ensure all models work together
+- [x] Run `dbt test` to verify data quality tests pass (PASS=169, ERROR=0)
+- [x] Fix stadium name test - added 'Journey Bank Ballpark' to accepted values in schema.yml
+- [x] **[MANUAL]** Verify Holiday Impact dashboard shows all expected data
+- [x] **[MANUAL]** Verify Game Impact dashboard shows all expected data
+- [x] Update `context/product/roadmap.md` to mark "Dynamic Date Ranges" as completed in Phase 4
 
 ---
 
-## Success Criteria (from Functional Spec)
+## Success Criteria (from Functional Spec) ✅
 
-- [ ] All dbt mart models work with any date range present in the data
-- [ ] No code changes required when backfilling historical data
-- [ ] Dashboards automatically reflect all available data
+- [x] All dbt mart models work with any date range present in the data
+- [x] No code changes required when backfilling historical data
+- [x] Dashboards automatically reflect all available data
