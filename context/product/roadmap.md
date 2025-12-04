@@ -66,9 +66,9 @@ _Ensure end-to-end pipeline orchestration and enable continuous data ingestion b
 
 - [ ] **Continuous Data Pipeline**
   - [ ] **Dynamic Date Ranges:** Remove hardcoded May-June 2024 dates from dbt models to support multi-year data
-  - [ ] **Automated Data Refresh:** Update Airflow DAGs to fetch latest bike trip data on a scheduled basis (daily/weekly)
-  - [ ] **Incremental Loading:** Configure dlt pipelines for incremental data ingestion (append new trips, avoid full reloads)
-  - [ ] **Historical Data Expansion:** Backfill historical data beyond May-June 2024 for richer trend analysis
+  - [x] **Automated Data Refresh:** ✅ Already done - DAG runs weekly with configurable `period_start_date`/`period_end_date` params
+  - [x] **Incremental Loading:** ✅ Already done - All 4 dlt pipelines use `write_disposition="merge"` with primary keys
+  - [x] **Historical Data Expansion:** ✅ Supported - Use existing DAG with custom date params to backfill (manual trigger)
 
 ---
 
