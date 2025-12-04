@@ -119,6 +119,7 @@ def run_game_pipeline(
     end_date: str = "2024-06-30",
     destination: str = "duckdb",
     dataset_name: str = "raw_games",
+    credentials_path: str | None = None,
 ) -> dict[str, Any]:
     """Run the MLB game data ingestion pipeline.
 
@@ -127,6 +128,8 @@ def run_game_pipeline(
         end_date: End date for game data (YYYY-MM-DD)
         destination: DLT destination name (default: "duckdb")
         dataset_name: Target dataset/schema name (default: "raw_games")
+        credentials_path: Optional absolute path to DuckDB file.
+                         If None, uses path from secrets.toml (requires running from project root).
 
     Returns:
         Pipeline execution result information
@@ -138,9 +141,15 @@ def run_game_pipeline(
         # Custom date range
         >>> run_game_pipeline("2024-07-01", "2024-08-31")
     """
+    # Determine destination configuration
+    if credentials_path:
+        dest = dlt.destinations.duckdb(credentials_path)
+    else:
+        dest = destination
+
     pipeline = dlt.pipeline(
         pipeline_name="game_ingestion",
-        destination=destination,
+        destination=dest,
         dataset_name=dataset_name,
     )
 

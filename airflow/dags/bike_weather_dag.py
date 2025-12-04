@@ -1,12 +1,11 @@
-"""Airflow DAG for bike, weather, and game data pipeline.
+"""Airflow DAG for bike, weather, game, and holiday data pipeline.
 
 This DAG orchestrates the complete data pipeline:
 1. Ingest bike trip data (dlt)
 2. Ingest weather data (dlt)
 3. Ingest MLB game data (dlt)
-4. Validate bike data (Great Expectations)
-5. Validate weather data (Great Expectations)
-6. Transform data (dbt)
+4. Ingest US holiday data (dlt)
+5. Transform data (dbt)
 """
 
 import sys
@@ -22,9 +21,13 @@ from airflow.operators.bash import BashOperator
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+# Absolute path to DuckDB for Airflow execution
+DUCKDB_PATH = str(project_root / "duckdb" / "warehouse.duckdb")
+
 from dlt_pipeline.bike import run_bike_pipeline  # noqa: E402
 from dlt_pipeline.weather import run_weather_pipeline  # noqa: E402
 from dlt_pipeline.games import run_game_pipeline  # noqa: E402
+from dlt_pipeline.holidays import run_holiday_pipeline  # noqa: E402
 
 
 # Default arguments for all tasks
@@ -61,7 +64,7 @@ with DAG(
         """Task to ingest bike trip data using dlt."""
         # For demo, ingest May and June 2024
         months = ["202405", "202406"]
-        result = run_bike_pipeline(months)
+        result = run_bike_pipeline(months, credentials_path=DUCKDB_PATH)
         return str(result)
 
     @task(
@@ -80,7 +83,7 @@ with DAG(
         start_date = "2024-05-01"
         end_date = "2024-06-30"
 
-        result = run_weather_pipeline(lat, lon, start_date, end_date)
+        result = run_weather_pipeline(lat, lon, start_date, end_date, credentials_path=DUCKDB_PATH)
         return str(result)
 
     @task(
@@ -96,13 +99,30 @@ with DAG(
         start_date = "2024-05-01"
         end_date = "2024-06-30"
 
-        result = run_game_pipeline(start_date, end_date)
+        result = run_game_pipeline(start_date, end_date, credentials_path=DUCKDB_PATH)
+        return str(result)
+
+    @task(
+        doc_md="""
+        ## Ingest US Holiday Data
+
+        Fetches US public holidays from Nager.Date API and loads into DuckDB.
+        Used to analyze bike demand patterns on holidays vs regular days.
+        """
+    )
+    def ingest_holiday_data() -> str:
+        """Task to ingest US holiday data using dlt."""
+        # Ingest 2024 holidays (matching bike data period)
+        years = [2024]
+
+        result = run_holiday_pipeline(years, credentials_path=DUCKDB_PATH)
         return str(result)
 
     # Task definitions
     ingest_bike = ingest_bike_data()
     ingest_weather = ingest_weather_data()
     ingest_games = ingest_game_data()
+    ingest_holidays = ingest_holiday_data()
 
     dbt_deps = BashOperator(
         task_id="dbt_deps",
@@ -137,5 +157,5 @@ with DAG(
         """,
     )
 
-    # Pipeline dependencies
-    [ingest_bike, ingest_weather, ingest_games] >> dbt_deps >> dbt_build >> dbt_docs_generate
+    # Pipeline dependencies - all 4 ingestion tasks run in parallel
+    [ingest_bike, ingest_weather, ingest_games, ingest_holidays] >> dbt_deps >> dbt_build >> dbt_docs_generate
