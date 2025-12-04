@@ -1,32 +1,32 @@
 # Tasks: Dynamic Date Ranges in dbt Models
 
 **Spec:** 006-dynamic-date-ranges
-**Status:** Draft
+**Status:** In Progress
 
 ---
 
-## Slice 1: Remove date filters from holiday impact summary model
+## Slice 1: Remove date filters from holiday impact summary model ✅
 
 **Goal:** Update the main holiday impact summary model to use all available holiday data. This is the foundational model for citywide holiday analytics.
 
-- [ ] Remove `where date between '2024-05-01' and '2024-06-30'` from `holidays` CTE in `mart_holiday_impact_summary.sql` (line 18)
-- [ ] Run `dbt build --select mart_holiday_impact_summary` from `dbt/` directory
-- [ ] Verify model builds successfully without errors
-- [ ] Verify Holiday Impact dashboard Summary section still loads
+- [x] Remove `where date between '2024-05-01' and '2024-06-30'` from `holidays` CTE in `mart_holiday_impact_summary.sql` (line 18)
+- [x] Run `dbt build --select mart_holiday_impact_summary` from `dbt/` directory
+- [x] Verify model builds successfully without errors
+- [x] Verify Holiday Impact dashboard Summary section still loads
 
 ---
 
-## Slice 2: Remove date filters from remaining holiday impact models
+## Slice 2: Remove date filters from remaining holiday impact models ✅
 
 **Goal:** Update the 3 supporting holiday models (station, hour, area) to match the summary model. System remains runnable after each sub-task.
 
-- [ ] Remove `where date between '2024-05-01' and '2024-06-30'` from `holidays` CTE in `mart_holiday_impact_by_station.sql` (line 18)
-- [ ] Run `dbt build --select mart_holiday_impact_by_station` - verify success
-- [ ] Remove `where date between '2024-05-01' and '2024-06-30'` from `holidays` CTE in `mart_holiday_impact_by_hour.sql` (line 18)
-- [ ] Run `dbt build --select mart_holiday_impact_by_hour` - verify success
-- [ ] Remove `where date between '2024-05-01' and '2024-06-30'` from `holidays` CTE in `mart_holiday_impact_by_area.sql` (line 18)
-- [ ] Run `dbt build --select mart_holiday_impact_by_area` - verify success
-- [ ] Verify complete Holiday Impact dashboard loads correctly (all sections)
+- [x] Remove `where date between '2024-05-01' and '2024-06-30'` from `holidays` CTE in `mart_holiday_impact_by_station.sql` (line 18)
+- [x] Run `dbt build --select mart_holiday_impact_by_station` - verify success
+- [x] Remove `where date between '2024-05-01' and '2024-06-30'` from `holidays` CTE in `mart_holiday_impact_by_hour.sql` (line 18)
+- [x] Run `dbt build --select mart_holiday_impact_by_hour` - verify success
+- [x] Remove `where date between '2024-05-01' and '2024-06-30'` from `holidays` CTE in `mart_holiday_impact_by_area.sql` (line 18)
+- [x] Run `dbt build --select mart_holiday_impact_by_area` - verify success
+- [x] Verify complete Holiday Impact dashboard loads correctly (all sections)
 
 ---
 
