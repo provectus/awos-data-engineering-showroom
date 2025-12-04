@@ -53,14 +53,16 @@ _Make insights accessible and actionable through dashboards._
 
 ---
 
-### Phase 4: Pipeline Orchestration & Continuous Data (Future)
+### Phase 4: Pipeline Orchestration & Continuous Data ✅ **PARTIALLY COMPLETE**
 
 _Ensure end-to-end pipeline orchestration and enable continuous data ingestion beyond the initial dataset._
 
-- [ ] **Airflow Orchestration Integration**
-  - [ ] **Data Ingestion DAG:** Verify and enhance Airflow tasks for all dlt pipelines (bike, weather, holidays, games) with proper error handling
-  - [ ] **dbt Execution DAG:** Integrate dbt build and test execution into Airflow workflows with proper dependency management
-  - [ ] **End-to-End Pipeline Validation:** Ensure complete pipeline runs successfully from ingestion through transformation to dashboard-ready data
+- [x] **Airflow Orchestration Integration** ✅ **COMPLETED**
+  - [x] **Data Ingestion DAG:** All 4 dlt pipelines (bike, weather, holidays, games) orchestrated in Airflow with `credentials_path` parameter for reliable DuckDB access
+  - [x] **Configurable Date Parameters:** DAG accepts `period_start_date` and `period_end_date` params (defaults to previous month)
+  - [x] **dbt Execution DAG:** dbt build and docs integrated with `trigger_rule='all_done'` ensuring dbt runs regardless of ingestion failures
+  - [x] **Weekly Schedule:** Changed from daily to weekly schedule for production-appropriate cadence
+  - [x] **End-to-End Pipeline Validation:** Complete pipeline runs successfully from ingestion through transformation
 
 - [ ] **Continuous Data Pipeline**
   - [ ] **Dynamic Date Ranges:** Remove hardcoded May-June 2024 dates from dbt models to support multi-year data
@@ -89,3 +91,16 @@ _Track and improve forecasting model performance over time._
 - [ ] **Forecast Accuracy Tracking**
   - [ ] **Prediction vs. Actual:** Monitor and display forecast accuracy metrics over time
   - [ ] **Model Performance Dashboard:** Track which factors (weather, events, holidays) drive best predictions
+
+---
+
+### Phase 7: Regional Expansion (Future)
+
+_Expand coverage to the greater NYC metro area bike share network._
+
+- [ ] **Jersey City Bike Share Integration**
+  - [ ] **JC Data Ingestion:** Add Jersey City Citi Bike trip data from S3 (JC-prefixed files, same schema as NYC)
+  - [ ] **Cross-River Analysis:** Analyze bike demand patterns between NYC and Jersey City/Hoboken
+  - [ ] **Regional Station Mapping:** Integrate JC/Hoboken stations (HB*, JC* prefixes) into station dimension with geographic classification
+  - [ ] **Unified Dashboard Views:** Enable NYC + Jersey City combined analytics and comparison views
+  - [ ] **Ferry Connection Analysis:** Identify demand patterns at stations near Hudson River ferry terminals

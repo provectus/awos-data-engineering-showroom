@@ -9,13 +9,51 @@ This DAG orchestrates the complete data pipeline:
 """
 
 import sys
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pendulum
 from airflow import DAG
 from airflow.decorators import task
 from airflow.operators.bash import BashOperator
+
+
+def get_previous_month_range() -> tuple[str, str]:
+    """Calculate first and last day of previous month.
+
+    Returns:
+        Tuple of (start_date, end_date) in YYYY-MM-DD format
+    """
+    today = datetime.now()
+    first_of_current = today.replace(day=1)
+    last_of_previous = first_of_current - timedelta(days=1)
+    first_of_previous = last_of_previous.replace(day=1)
+    return first_of_previous.strftime("%Y-%m-%d"), last_of_previous.strftime("%Y-%m-%d")
+
+
+def get_months_from_date_range(start_date: str, end_date: str) -> list[str]:
+    """Convert date range to list of months in YYYYMM format.
+
+    Args:
+        start_date: Start date in YYYY-MM-DD format
+        end_date: End date in YYYY-MM-DD format
+
+    Returns:
+        List of month strings, e.g., ["202411", "202412"]
+    """
+    start = datetime.strptime(start_date, "%Y-%m-%d")
+    end = datetime.strptime(end_date, "%Y-%m-%d")
+
+    months = []
+    current = start
+    while current <= end:
+        months.append(current.strftime("%Y%m"))
+        if current.month == 12:
+            current = current.replace(year=current.year + 1, month=1)
+        else:
+            current = current.replace(month=current.month + 1)
+
+    return list(dict.fromkeys(months))  # Remove duplicates, preserve order
 
 # Add parent directory to path to import our modules
 project_root = Path(__file__).parent.parent.parent
@@ -41,15 +79,22 @@ default_args = {
     "execution_timeout": timedelta(hours=1),
 }
 
+# Calculate default date range (previous month)
+default_start, default_end = get_previous_month_range()
+
 # DAG definition using context manager
 with DAG(
     dag_id="bike_weather_pipeline",
     default_args=default_args,
     description="End-to-end bike and weather data pipeline",
-    schedule_interval="@daily",
+    schedule_interval="@weekly",
     start_date=pendulum.datetime(2024, 5, 1, tz="UTC"),
     catchup=False,
     tags=["data-ingestion", "analytics", "demo"],
+    params={
+        "period_start_date": default_start,
+        "period_end_date": default_end,
+    },
 ) as dag:
 
     @task(
@@ -60,10 +105,12 @@ with DAG(
         Uses dlt for idempotent, incremental loading.
         """
     )
-    def ingest_bike_data() -> str:
+    def ingest_bike_data(**context) -> str:
         """Task to ingest bike trip data using dlt."""
-        # For demo, ingest May and June 2024
-        months = ["202405", "202406"]
+        period_start = context["params"]["period_start_date"]
+        period_end = context["params"]["period_end_date"]
+        months = get_months_from_date_range(period_start, period_end)
+
         result = run_bike_pipeline(months, credentials_path=DUCKDB_PATH)
         return str(result)
 
@@ -75,15 +122,15 @@ with DAG(
         Covers the same time period as bike data for correlation analysis.
         """
     )
-    def ingest_weather_data() -> str:
+    def ingest_weather_data(**context) -> str:
         """Task to ingest weather data using dlt."""
+        period_start = context["params"]["period_start_date"]
+        period_end = context["params"]["period_end_date"]
         # NYC coordinates
         lat = 40.73
         lon = -73.94
-        start_date = "2024-05-01"
-        end_date = "2024-06-30"
 
-        result = run_weather_pipeline(lat, lon, start_date, end_date, credentials_path=DUCKDB_PATH)
+        result = run_weather_pipeline(lat, lon, period_start, period_end, credentials_path=DUCKDB_PATH)
         return str(result)
 
     @task(
@@ -94,12 +141,12 @@ with DAG(
         Used to analyze bike demand patterns on game days vs non-game days.
         """
     )
-    def ingest_game_data() -> str:
+    def ingest_game_data(**context) -> str:
         """Task to ingest MLB game data using dlt."""
-        start_date = "2024-05-01"
-        end_date = "2024-06-30"
+        period_start = context["params"]["period_start_date"]
+        period_end = context["params"]["period_end_date"]
 
-        result = run_game_pipeline(start_date, end_date, credentials_path=DUCKDB_PATH)
+        result = run_game_pipeline(period_start, period_end, credentials_path=DUCKDB_PATH)
         return str(result)
 
     @task(
@@ -110,10 +157,15 @@ with DAG(
         Used to analyze bike demand patterns on holidays vs regular days.
         """
     )
-    def ingest_holiday_data() -> str:
+    def ingest_holiday_data(**context) -> str:
         """Task to ingest US holiday data using dlt."""
-        # Ingest 2024 holidays (matching bike data period)
-        years = [2024]
+        period_start = context["params"]["period_start_date"]
+        period_end = context["params"]["period_end_date"]
+
+        # Extract unique years from date range
+        start_year = int(period_start[:4])
+        end_year = int(period_end[:4])
+        years = list(range(start_year, end_year + 1))
 
         result = run_holiday_pipeline(years, credentials_path=DUCKDB_PATH)
         return str(result)
@@ -127,10 +179,12 @@ with DAG(
     dbt_deps = BashOperator(
         task_id="dbt_deps",
         bash_command=f"cd {project_root}/dbt && dbt deps --profiles-dir .",
+        trigger_rule="all_done",  # Run even if upstream tasks fail
         doc_md="""
         ## Install dbt Dependencies
 
         Installs required dbt packages (dbt_utils, etc.)
+        Runs regardless of ingestion task success/failure.
         """,
     )
 
@@ -158,4 +212,5 @@ with DAG(
     )
 
     # Pipeline dependencies - all 4 ingestion tasks run in parallel
-    [ingest_bike, ingest_weather, ingest_games, ingest_holidays] >> dbt_deps >> dbt_build >> dbt_docs_generate
+    ingestion_tasks = [ingest_bike, ingest_weather, ingest_games, ingest_holidays]
+    ingestion_tasks >> dbt_deps >> dbt_build >> dbt_docs_generate

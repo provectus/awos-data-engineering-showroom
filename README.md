@@ -13,6 +13,7 @@ A data platform showcasing modern data stack with incremental value from adding 
 - [Demo Walkthrough](#demo-walkthrough)
 - [Holiday Data Integration](#-holiday-data-integration)
 - [🎉 Historical Holiday Analysis (NEW)](#-historical-holiday-analysis-new)
+- [Airflow Orchestration](#-airflow-orchestration)
 - [Development](#development)
 - [Testing](#testing)
 - [Data Sources](#-data-sources)
@@ -135,6 +136,7 @@ weather-bike-demo/
 │   ├── __init__.py
 │   ├── bike.py                      # Bike data ingestion
 │   ├── weather.py                   # Weather data ingestion
+│   ├── games.py                     # MLB game data ingestion
 │   ├── holidays.py                  # Holiday data ingestion
 │   └── .dlt/
 │       └── config.toml              # dlt configuration
@@ -318,22 +320,7 @@ Now you can analyze bike demand patterns around holidays and compare working vs 
 
 ### Option 2: Airflow Orchestration
 
-#### Initialize Airflow in standalone mode 
-
-```bash
-export AIRFLOW_HOME=$PWD/airflow
-```
-
-```bash
-uv run airflow standalone
-```
-
-#### Trigger the DAG
-```bash
-uv run airflow dags trigger bike_weather_pipeline
-```
-
-Or use the Airflow UI at http://localhost:8080 (login: will be displayed in logs)
+See the [Airflow Orchestration](#-airflow-orchestration) section below for detailed instructions on running the pipeline with Airflow, including custom date parameters.
 
 ## 🎬 Demo Walkthrough
 
@@ -590,6 +577,109 @@ PYTHONPATH=. uv run pytest tests/test_holiday_pipeline.py -v
 cd dbt
 uv run dbt test --select stg_holidays
 ```
+
+## 🔄 Airflow Orchestration
+
+### Overview
+
+The Airflow DAG (`bike_weather_pipeline`) orchestrates all 4 dlt pipelines in a single workflow:
+
+1. **Bike Data Ingestion** - NYC Citi Bike trip data from S3
+2. **Weather Data Ingestion** - Daily weather from Open-Meteo API
+3. **Game Data Ingestion** - MLB games from MLB Stats API
+4. **Holiday Data Ingestion** - US holidays from Nager.Date API
+
+All 4 ingestion tasks run in parallel, followed by dbt transformation and documentation generation.
+
+### Schedule
+
+- **Frequency**: Weekly (`@weekly`)
+- **Default Date Range**: Previous month (bike data typically has ~1 month delay)
+- **Trigger Rule**: dbt runs regardless of ingestion task success/failure (`trigger_rule='all_done'`)
+
+### Starting Airflow
+
+```bash
+# Set Airflow home directory
+export AIRFLOW_HOME=$PWD/airflow
+
+# Start Airflow standalone (includes webserver + scheduler)
+uv run airflow standalone
+```
+
+Access the Airflow UI at http://localhost:8080 (credentials displayed in terminal).
+
+### Triggering the DAG
+
+**Default Parameters (Previous Month)**:
+```bash
+# Trigger with default date range (previous month)
+uv run airflow dags trigger bike_weather_pipeline
+```
+
+**Custom Date Parameters**:
+```bash
+# Trigger with specific date range
+uv run airflow dags trigger bike_weather_pipeline \
+  --conf '{"period_start_date": "2024-05-01", "period_end_date": "2024-06-30"}'
+```
+
+You can also trigger with custom parameters via the Airflow UI:
+1. Go to DAGs → `bike_weather_pipeline`
+2. Click "Trigger DAG w/ config"
+3. Enter JSON: `{"period_start_date": "2024-05-01", "period_end_date": "2024-06-30"}`
+
+### DAG Parameters
+
+| Parameter | Format | Default | Description |
+|-----------|--------|---------|-------------|
+| `period_start_date` | YYYY-MM-DD | First day of previous month | Start of date range for data ingestion |
+| `period_end_date` | YYYY-MM-DD | Last day of previous month | End of date range for data ingestion |
+
+Each pipeline translates these parameters to its native format:
+- **Bike**: Converts to months list (e.g., `["202405", "202406"]`)
+- **Weather**: Uses dates as-is (YYYY-MM-DD)
+- **Games**: Uses dates as-is (YYYY-MM-DD)
+- **Holidays**: Extracts unique years (e.g., `[2024]`)
+
+### DAG Structure
+
+```
+┌──────────────────┐  ┌────────────────────┐  ┌──────────────────┐  ┌────────────────────┐
+│ ingest_bike_data │  │ ingest_weather_data│  │ ingest_game_data │  │ ingest_holiday_data│
+└────────┬─────────┘  └─────────┬──────────┘  └────────┬─────────┘  └─────────┬──────────┘
+         │                      │                       │                      │
+         └──────────────────────┼───────────────────────┼──────────────────────┘
+                                │
+                                ▼
+                       ┌────────────────┐
+                       │   dbt_deps     │  (trigger_rule='all_done')
+                       └────────┬───────┘
+                                │
+                                ▼
+                       ┌────────────────┐
+                       │   dbt_build    │
+                       └────────┬───────┘
+                                │
+                                ▼
+                       ┌────────────────────┐
+                       │ dbt_docs_generate  │
+                       └────────────────────┘
+```
+
+### Standalone Execution
+
+All pipelines can still be run standalone from the project root for testing or backfill:
+
+```bash
+# Run individual pipelines (from project root)
+uv run python dlt_pipeline/bike.py
+uv run python dlt_pipeline/weather.py
+uv run python dlt_pipeline/games.py
+uv run python dlt_pipeline/holidays.py
+```
+
+**Note**: Standalone mode uses the DuckDB path from `dlt_pipeline/.dlt/secrets.toml`. Always run from the project root directory.
 
 ## 💻 Development
 
