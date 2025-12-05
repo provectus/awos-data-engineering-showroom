@@ -72,15 +72,15 @@ _Ensure end-to-end pipeline orchestration and enable continuous data ingestion b
 
 ---
 
-### Phase 5: Data Quality Enhancement (Future)
+### Phase 5: Data Quality & Testing (Next)
 
-_Strengthen data reliability and quality monitoring for production readiness._
+_Comprehensive data quality framework with automated validation, monitoring, and reporting._
 
-- [ ] **Enhanced Data Quality Checks**
-  - [ ] **Expanded dbt Tests:** Add comprehensive data quality tests in dbt models (schema validation, referential integrity, null checks)
-  - [ ] **Great Expectations Review & Enhancement:** Review existing bike data validation setup and adopt/fix if needed; extend test suites to cover holiday and event data validation
-  - [ ] **Data Quality DAG:** Create Airflow tasks to run Great Expectations checkpoints alongside existing data pipelines
-  - [ ] **Quality Monitoring Dashboard:** Track data quality metrics and test results over time in Streamlit or Airflow UI
+- [ ] **Data Quality Framework**
+  - [ ] **dbt Testing Enhancement:** Add comprehensive tests using dbt_utils/dbt_expectations packages (uniqueness, relationships, accepted values, row counts, recency) plus source freshness checks for all raw data sources
+  - [ ] **Great Expectations Redesign:** Fix current broken implementation, extend validation suites to all data sources (weather, holidays, games), ensure runnable from repo root and Airflow
+  - [ ] **Data Quality DAG:** Create dedicated daily `data_quality_dag.py` that runs dbt tests and GX checkpoints, stores results in DuckDB `data_quality` schema
+  - [ ] **Data Quality Dashboard:** Streamlit page showing test pass/fail rates, source health, data freshness, and historical quality trends
 
 ---
 
