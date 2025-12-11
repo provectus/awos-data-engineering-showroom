@@ -195,6 +195,7 @@ def run_bike_pipeline(
     months: list[str],
     destination: str = "duckdb",
     dataset_name: str = "raw_bike",
+    credentials_path: str | None = None,
 ) -> dict[str, Any]:
     """Run the bike data ingestion pipeline.
 
@@ -202,14 +203,22 @@ def run_bike_pipeline(
         months: List of month strings to ingest
         destination: DLT destination name (default: "duckdb")
         dataset_name: Target dataset/schema name (default: "raw_bike")
+        credentials_path: Optional absolute path to DuckDB file.
+                         If None, uses path from secrets.toml (requires running from project root).
 
     Returns:
         Pipeline execution result information
     """
+    # Determine destination configuration
+    if credentials_path:
+        dest = dlt.destinations.duckdb(credentials_path)
+    else:
+        dest = destination
+
     logger.info("Pipeline started")
     pipeline = dlt.pipeline(
         pipeline_name="bike_ingestion",
-        destination=destination,
+        destination=dest,
         dataset_name=dataset_name,
     )
 

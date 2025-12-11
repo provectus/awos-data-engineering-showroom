@@ -207,6 +207,7 @@ def run_holiday_pipeline(
     years: list[int],
     destination: str = "duckdb",
     dataset_name: str = "raw_holidays",
+    credentials_path: str | None = None,
 ) -> dict[str, Any]:
     """Run the holiday data ingestion pipeline.
 
@@ -214,13 +215,21 @@ def run_holiday_pipeline(
         years: List of years to ingest holidays for
         destination: DLT destination name (default: "duckdb")
         dataset_name: Target dataset/schema name (default: "raw_holidays")
+        credentials_path: Optional absolute path to DuckDB file.
+                         If None, uses path from secrets.toml (requires running from project root).
 
     Returns:
         Pipeline execution result information
     """
+    # Determine destination configuration
+    if credentials_path:
+        dest = dlt.destinations.duckdb(credentials_path)
+    else:
+        dest = destination
+
     pipeline = dlt.pipeline(
         pipeline_name="holiday_ingestion",
-        destination=destination,
+        destination=dest,
         dataset_name=dataset_name,
     )
 

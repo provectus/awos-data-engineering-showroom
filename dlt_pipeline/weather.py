@@ -100,6 +100,7 @@ def run_weather_pipeline(
     end_date: str,
     destination: str = "duckdb",
     dataset_name: str = "raw_weather",
+    credentials_path: str | None = None,
 ) -> dict[str, Any]:
     """Run the weather data ingestion pipeline.
 
@@ -110,13 +111,21 @@ def run_weather_pipeline(
         end_date: End date in YYYY-MM-DD format
         destination: DLT destination name (default: "duckdb")
         dataset_name: Target dataset/schema name (default: "raw_weather")
+        credentials_path: Optional absolute path to DuckDB file.
+                         If None, uses path from secrets.toml (requires running from project root).
 
     Returns:
         Pipeline execution result information
     """
+    # Determine destination configuration
+    if credentials_path:
+        dest = dlt.destinations.duckdb(credentials_path)
+    else:
+        dest = destination
+
     pipeline = dlt.pipeline(
         pipeline_name="weather_ingestion",
-        destination=destination,
+        destination=dest,
         dataset_name=dataset_name,
     )
 

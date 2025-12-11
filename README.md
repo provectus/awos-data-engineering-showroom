@@ -13,6 +13,8 @@ A data platform showcasing modern data stack with incremental value from adding 
 - [Demo Walkthrough](#demo-walkthrough)
 - [Holiday Data Integration](#-holiday-data-integration)
 - [🎉 Historical Holiday Analysis (NEW)](#-historical-holiday-analysis-new)
+- [Airflow Orchestration](#-airflow-orchestration)
+- [Data Quality Framework](#-data-quality-framework)
 - [Development](#development)
 - [Testing](#testing)
 - [Data Sources](#-data-sources)
@@ -40,13 +42,21 @@ This project demonstrates a complete data pipeline that:
 - Classifies holidays as major/federal vs optional/local
 - Identifies working vs non-working days for demand analysis
 
-**Part 4 - Historical Holiday Analysis (🆕 NEW)** ✅ Spec 002 Completed
+**Part 4 - Historical Holiday Analysis** ✅ Spec 002 Completed
 - Analyzes historical bike demand around holidays vs regular weekdays
 - 4 new dbt mart models (summary, by-station, by-hour, by-area)
 - Interactive dashboard with 6 comprehensive analysis sections
 - K-Means clustering for neighborhood-level demand visualization (10-50 adjustable clusters)
 - Statistical significance testing (t-test p-values)
 - Rebalancing recommendations for operations teams
+
+**Part 5 - Data Quality Framework (🆕 NEW)** ✅ Spec 007 Completed
+- Great Expectations validation on all 4 raw sources (31 expectations)
+- dbt source freshness checks (10-day warn, 15-day error thresholds)
+- 138 dbt tests (uniqueness, not_null, accepted values)
+- Automated Data Quality DAG (daily at 6 AM UTC)
+- Results stored in `data_quality.test_results` table
+- Interactive Data Quality dashboard with KPI cards and freshness status
 
 ### Key Features
 
@@ -129,24 +139,27 @@ This project demonstrates a complete data pipeline that:
 weather-bike-demo/
 ├── airflow/
 │   ├── dags/
-│   │   └── bike_weather_dag.py      # Main orchestration DAG
+│   │   ├── bike_weather_dag.py      # Main orchestration DAG
+│   │   └── data_quality_dag.py      # Data quality validation DAG (daily)
 │   └── airflow.cfg                  # Airflow configuration
 ├── dlt_pipeline/
 │   ├── __init__.py
 │   ├── bike.py                      # Bike data ingestion
 │   ├── weather.py                   # Weather data ingestion
+│   ├── games.py                     # MLB game data ingestion
 │   ├── holidays.py                  # Holiday data ingestion
 │   └── .dlt/
 │       └── config.toml              # dlt configuration
 ├── data_quality/
 │   ├── gx/                          # Great Expectations directory
 │   │   ├── great_expectations.yml   # GE configuration
-│   │   ├── expectations/            # Data validation suites
+│   │   ├── expectations/            # Data validation suites (4 suites)
 │   │   ├── checkpoints/             # Validation checkpoints
 │   │   └── uncommitted/             # Validation results (git-ignored)
 │   ├── validate_bike_data.py        # Bike validation script
 │   ├── validate_weather_data.py     # Weather validation script
-│   └── validate_all.py              # Run all validations
+│   ├── validate_all.py              # Run all 4 source validations
+│   └── store_results.py             # Store results in DuckDB (subprocess)
 ├── dbt/
 │   ├── dbt_project.yml              # dbt project config
 │   ├── profiles.yml                 # Database connections
@@ -170,7 +183,8 @@ weather-bike-demo/
 │   ├── Home.py                      # Main dashboard
 │   └── pages/
 │       ├── Weather.py               # Weather impact page
-│       └── 🆕 Holiday_Impact.py     # Historical holiday analysis (6 sections)
+│       ├── Holiday_Impact.py        # Historical holiday analysis (6 sections)
+│       └── 🆕 Data_Quality.py       # Data quality monitoring dashboard
 ├── notebooks/
 │   └── polars_eda.ipynb             # Exploratory analysis
 ├── tests/
@@ -318,22 +332,7 @@ Now you can analyze bike demand patterns around holidays and compare working vs 
 
 ### Option 2: Airflow Orchestration
 
-#### Initialize Airflow in standalone mode 
-
-```bash
-export AIRFLOW_HOME=$PWD/airflow
-```
-
-```bash
-uv run airflow standalone
-```
-
-#### Trigger the DAG
-```bash
-uv run airflow dags trigger bike_weather_pipeline
-```
-
-Or use the Airflow UI at http://localhost:8080 (login: will be displayed in logs)
+See the [Airflow Orchestration](#-airflow-orchestration) section below for detailed instructions on running the pipeline with Airflow, including custom date parameters.
 
 ## 🎬 Demo Walkthrough
 
@@ -589,6 +588,173 @@ PYTHONPATH=. uv run pytest tests/test_holiday_pipeline.py -v
 ```bash
 cd dbt
 uv run dbt test --select stg_holidays
+```
+
+## 🔄 Airflow Orchestration
+
+### Overview
+
+The Airflow DAG (`bike_weather_pipeline`) orchestrates all 4 dlt pipelines in a single workflow:
+
+1. **Bike Data Ingestion** - NYC Citi Bike trip data from S3
+2. **Weather Data Ingestion** - Daily weather from Open-Meteo API
+3. **Game Data Ingestion** - MLB games from MLB Stats API
+4. **Holiday Data Ingestion** - US holidays from Nager.Date API
+
+All 4 ingestion tasks run in parallel, followed by dbt transformation and documentation generation.
+
+### Schedule
+
+- **Frequency**: Weekly (`@weekly`)
+- **Default Date Range**: Previous month (bike data typically has ~1 month delay)
+- **Trigger Rule**: dbt runs regardless of ingestion task success/failure (`trigger_rule='all_done'`)
+
+### Starting Airflow
+
+```bash
+# Set Airflow home directory
+export AIRFLOW_HOME=$PWD/airflow
+
+# Start Airflow standalone (includes webserver + scheduler)
+uv run airflow standalone
+```
+
+Access the Airflow UI at http://localhost:8080 (credentials displayed in terminal).
+
+### Triggering the DAG
+
+**Default Parameters (Previous Month)**:
+```bash
+# Trigger with default date range (previous month)
+uv run airflow dags trigger bike_weather_pipeline
+```
+
+**Custom Date Parameters**:
+```bash
+# Trigger with specific date range
+uv run airflow dags trigger bike_weather_pipeline \
+  --conf '{"period_start_date": "2024-05-01", "period_end_date": "2024-06-30"}'
+```
+
+You can also trigger with custom parameters via the Airflow UI:
+1. Go to DAGs → `bike_weather_pipeline`
+2. Click "Trigger DAG w/ config"
+3. Enter JSON: `{"period_start_date": "2024-05-01", "period_end_date": "2024-06-30"}`
+
+### DAG Parameters
+
+| Parameter | Format | Default | Description |
+|-----------|--------|---------|-------------|
+| `period_start_date` | YYYY-MM-DD | First day of previous month | Start of date range for data ingestion |
+| `period_end_date` | YYYY-MM-DD | Last day of previous month | End of date range for data ingestion |
+
+Each pipeline translates these parameters to its native format:
+- **Bike**: Converts to months list (e.g., `["202405", "202406"]`)
+- **Weather**: Uses dates as-is (YYYY-MM-DD)
+- **Games**: Uses dates as-is (YYYY-MM-DD)
+- **Holidays**: Extracts unique years (e.g., `[2024]`)
+
+### DAG Structure
+
+```
+┌──────────────────┐  ┌────────────────────┐  ┌──────────────────┐  ┌────────────────────┐
+│ ingest_bike_data │  │ ingest_weather_data│  │ ingest_game_data │  │ ingest_holiday_data│
+└────────┬─────────┘  └─────────┬──────────┘  └────────┬─────────┘  └─────────┬──────────┘
+         │                      │                       │                      │
+         └──────────────────────┼───────────────────────┼──────────────────────┘
+                                │
+                                ▼
+                       ┌────────────────┐
+                       │   dbt_deps     │  (trigger_rule='all_done')
+                       └────────┬───────┘
+                                │
+                                ▼
+                       ┌────────────────┐
+                       │   dbt_build    │
+                       └────────┬───────┘
+                                │
+                                ▼
+                       ┌────────────────────┐
+                       │ dbt_docs_generate  │
+                       └────────────────────┘
+```
+
+### Standalone Execution
+
+All pipelines can still be run standalone from the project root for testing or backfill:
+
+```bash
+# Run individual pipelines (from project root)
+uv run python dlt_pipeline/bike.py
+uv run python dlt_pipeline/weather.py
+uv run python dlt_pipeline/games.py
+uv run python dlt_pipeline/holidays.py
+```
+
+**Note**: Standalone mode uses the DuckDB path from `dlt_pipeline/.dlt/secrets.toml`. Always run from the project root directory.
+
+## ✅ Data Quality Framework
+
+### Overview
+
+The Data Quality Framework provides comprehensive validation, monitoring, and reporting for all data sources. It combines Great Expectations for raw data validation with dbt tests for transformed data quality.
+
+### Components
+
+**Great Expectations Validation** (31 total expectations):
+- `bike_trips_suite`: ride_id uniqueness, not_null checks, value ranges
+- `weather_suite`: date uniqueness, temperature ranges
+- `holidays_suite`: date uniqueness, not_null on holiday_name
+- `games_suite`: game_id uniqueness, not_null checks
+
+**dbt Source Freshness**:
+- All 4 raw sources have freshness checks configured
+- Warn threshold: 10 days
+- Error threshold: 15 days
+- Run with: `uv run dbt source freshness --profiles-dir . --project-dir .`
+
+**dbt Tests** (138 total tests):
+- Uniqueness tests on primary keys
+- Not null tests on required columns
+- Accepted values tests
+- Custom SQL tests
+
+### Data Quality DAG
+
+The `data_quality_dag` runs daily at 6 AM UTC and:
+1. Runs Great Expectations validations on all 4 sources (as subprocess)
+2. Runs dbt tests (as subprocess)
+3. Stores results in `data_quality.test_results` table (as subprocess)
+
+**Note**: All tasks run as subprocesses to isolate memory from the Airflow standalone scheduler. Heavy imports (GX, pandas, duckdb) in the scheduler process caused crashes.
+
+### Running Validations
+
+```bash
+# Validate all 4 data sources with Great Expectations
+uv run python data_quality/validate_all.py
+
+# Run dbt tests
+cd dbt && uv run dbt test --profiles-dir . --project-dir .
+
+# Check source freshness
+cd dbt && uv run dbt source freshness --profiles-dir . --project-dir .
+
+# Trigger data quality DAG via Airflow
+export AIRFLOW_HOME=$PWD/airflow
+uv run airflow dags trigger data_quality_dag
+```
+
+### Data Quality Dashboard
+
+Access the Data Quality dashboard in Streamlit (`pages/Data_Quality.py`):
+- **KPI Cards**: Total tests, passed, failed, pass rate
+- **Data Freshness**: OK/WARN/STALE status for each source with color coding
+- **Failed Tests**: Expandable details for any failed validations
+
+```bash
+uv run streamlit run streamlit_app/Home.py
+# Navigate to "Data Quality" page
 ```
 
 ## 💻 Development

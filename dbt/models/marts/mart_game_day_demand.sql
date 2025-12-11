@@ -18,8 +18,7 @@ with games as (
         home_team_name,
         away_team_name
     from {{ ref('stg_games') }}
-    where game_date between '2024-05-01' and '2024-06-30'
-      and stadium_name in ('Yankee Stadium', 'Citi Field')  -- Exclude London Stadium
+    where stadium_name in ('Yankee Stadium', 'Citi Field')  -- Exclude non-NYC stadiums
 ),
 
 nearby_stations as (
@@ -108,7 +107,6 @@ baseline_demand as (
     inner join {{ ref('stg_bike_trips') }} t
         on dayofweek(t.ride_date) = dayofweek(g.game_date)
         and t.ride_date != g.game_date
-        and t.ride_date between '2024-05-01' and '2024-06-30'
         and (t.started_at between g.game_datetime - interval '3 hours'
                               and g.estimated_end_datetime + interval '3 hours'
              or t.ended_at between g.game_datetime - interval '3 hours'

@@ -1,0 +1,55 @@
+{
+  "expectations": [
+    {
+      "id": "b1c2d3e4-f5a6-4789-bcde-1111aaaa1111",
+      "kwargs": {
+        "column": "game_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b1c2d3e4-f5a6-4789-bcde-2222bbbb2222",
+      "kwargs": {
+        "column": "game_id"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "b1c2d3e4-f5a6-4789-bcde-3333cccc3333",
+      "kwargs": {
+        "column": "game_date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b1c2d3e4-f5a6-4789-bcde-4444dddd4444",
+      "kwargs": {
+        "column": "venue_name"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "b1c2d3e4-f5a6-4789-bcde-5555eeee5555",
+      "kwargs": {
+        "min_value": 1
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_table_row_count_to_be_between"
+    }
+  ],
+  "id": "c1d2e3f4-a5b6-4789-8765-fedcba098765",
+  "meta": {
+    "great_expectations_version": "1.8.1"
+  },
+  "name": "games_suite",
+  "notes": null
+}

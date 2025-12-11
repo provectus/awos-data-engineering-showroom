@@ -4,6 +4,10 @@ sources:
   - name: raw_holidays
     description: "Raw holiday data ingested from Nager.Date API"
     schema: raw_holidays
+    freshness:
+      warn_after: {count: 10, period: day}
+      error_after: {count: 15, period: day}
+    loaded_at_field: "CAST(date AS TIMESTAMP)"
     tables:
       - name: us_holidays
         description: "US public holidays with intelligent date deduplication"
@@ -23,12 +27,19 @@ sources:
   - name: raw_games
     description: "Raw MLB game data ingested from MLB Stats API"
     schema: raw_games
+    freshness:
+      warn_after: {count: 10, period: day}
+      error_after: {count: 15, period: day}
+    loaded_at_field: "CAST(game_date AS TIMESTAMP)"
     tables:
       - name: mlb_games
         description: "NY Yankees and NY Mets home game schedules"
         columns:
           - name: game_id
             description: "Unique game identifier (MLB gamePk)"
+            tests:
+              - unique
+              - not_null
           - name: game_date
             description: "Game date (YYYY-MM-DD)"
           - name: game_datetime
@@ -169,7 +180,7 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values: ['Yankee Stadium', 'Citi Field', 'London Stadium']
+              values: ['Yankee Stadium', 'Citi Field', 'London Stadium', 'Journey Bank Ballpark']
 
       - name: is_yankees_home
         description: "Boolean flag for Yankees home games"

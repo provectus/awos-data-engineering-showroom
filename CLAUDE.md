@@ -70,17 +70,21 @@ uv run python dlt_pipeline/holidays.py
 
 **Data Quality Validation (Great Expectations)**:
 ```bash
-# Validate bike trip data
-uv run python data_quality/validate_bike_data.py
-
-# Validate weather data
-uv run python data_quality/validate_weather_data.py
-
-# Validate all data sources
+# Validate all 4 data sources (bike_trips, weather, holidays, games)
 uv run python data_quality/validate_all.py
 
 # View validation reports in browser
 open data_quality/gx/uncommitted/data_docs/local_site/index.html
+```
+
+**dbt Source Freshness**:
+```bash
+cd dbt
+
+# Check data freshness for all sources (10-day warn, 15-day error thresholds)
+uv run dbt source freshness --profiles-dir . --project-dir .
+
+cd ..
 ```
 
 **Data Transformation (dbt)**:
@@ -117,9 +121,22 @@ uv run airflow standalone
 # Trigger DAG manually
 uv run airflow dags trigger bike_weather_pipeline
 
+# Trigger data quality DAG (runs GX validations + dbt tests)
+uv run airflow dags trigger data_quality_dag
+
 # Check DAG status
 uv run airflow dags list
 ```
+
+**Airflow DAGs:**
+- **bike_weather_dag.py** - Main data ingestion pipeline (weekly schedule)
+  - Runs 4 dlt pipelines in parallel (bike, weather, holidays, games)
+  - Then runs dbt build and docs generation
+- **data_quality_dag.py** - Data quality validation (daily at 6 AM UTC)
+  - Runs Great Expectations validations (all 4 sources)
+  - Runs dbt tests (138 tests)
+  - Stores results in `data_quality.test_results` table
+  - All tasks run as subprocesses to avoid Airflow scheduler memory issues
 
 **Dashboard (Streamlit)**:
 ```bash
@@ -138,6 +155,10 @@ uv run streamlit run streamlit_app/Home.py
   4. Hourly Demand Pattern (24-hour comparison showing peak hour shifts)
   5. Top Stations Ranking (top 10 increased/decreased demand with rebalancing recommendations)
   6. Holiday Comparison Table (sortable table comparing all 4 holidays side-by-side)
+- **pages/Data_Quality.py** - Data quality monitoring dashboard with:
+  - KPI cards (total tests, passed, failed, pass rate)
+  - Data freshness status (OK/WARN/STALE with color coding)
+  - Failed test details with expandable sections
 
 **Jupyter Notebooks**:
 ```bash
@@ -394,13 +415,18 @@ See `.claude/agents/domain-experts/` for detailed agent prompts and capabilities
 
 ## Product Context
 
-**Current State**: MVP delivering NYC bike demand analytics with weather enrichment
+**Current State**: Full-featured NYC bike demand analytics platform with weather, holidays, game day analysis, demand forecasting, and data quality monitoring.
 
-**Immediate Roadmap** (see `context/product/roadmap.md`):
-- **Phase 1 (Next)**: Holiday impact analysis using Nager.Date API
-- **Phase 2**: Predictive demand forecasting with ML
-- **Phase 3**: Route optimization for rebalancing operations
-- **Phase 4**: Multi-city expansion
+**Completed Phases** (see `context/product/roadmap.md`):
+- **Phase 1**: Data Foundation & Analytics (holidays, games, pipeline orchestration)
+- **Phase 2**: Predictive Intelligence (station clustering, demand forecasting, what-if scenarios)
+- **Phase 3**: Visualization & User Experience (holiday, game, and forecast dashboards)
+- **Phase 4**: Pipeline Orchestration & Continuous Data (Airflow DAGs, incremental loading)
+- **Phase 5**: Data Quality & Testing (GX + dbt testing, source freshness, quality dashboard)
+
+**Future Roadmap**:
+- **Phase 6**: Model Performance & Analytics (forecast accuracy tracking)
+- **Phase 7**: Regional Expansion (Jersey City Bike Share integration)
 
 **Key Users**:
 - Bike-share operations managers (primary) - daily rebalancing decisions

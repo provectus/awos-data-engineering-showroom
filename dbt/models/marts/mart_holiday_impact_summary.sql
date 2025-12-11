@@ -5,7 +5,7 @@
 }}
 
 -- Historical Holiday Impact Analysis (Slice 3: All Holidays with Member/Casual Breakdown)
--- Compares all May-June 2024 holidays bike demand to baseline weekdays
+-- Compares all available holidays bike demand to baseline weekdays
 -- Includes member vs casual rider analysis
 
 with holidays as (
@@ -15,7 +15,6 @@ with holidays as (
         is_major,
         is_working_day
     from {{ ref('stg_holidays') }}
-    where date between '2024-05-01' and '2024-06-30'  -- All May-June 2024 holidays
 ),
 
 -- Generate baseline days: weekdays within +/- 15 days, excluding the holiday and other holidays

@@ -15,7 +15,6 @@ with holidays as (
         is_major,
         is_working_day
     from {{ ref('stg_holidays') }}
-    where date between '2024-05-01' and '2024-06-30'  -- May-June 2024 holidays
 ),
 
 -- Generate baseline days: weekdays within +/- 15 days, excluding the holiday and other holidays
