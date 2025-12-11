@@ -4,6 +4,10 @@ sources:
   - name: raw_bike
     description: "Raw bike trip data ingested via dlt pipeline"
     schema: raw_bike
+    freshness:
+      warn_after: {count: 10, period: day}
+      error_after: {count: 15, period: day}
+    loaded_at_field: started_at
     tables:
       - name: bike_trips
         description: "Raw bike trip records from Citi Bike system"
@@ -71,6 +75,10 @@ sources:
   - name: raw_weather
     description: "Raw weather data ingested via dlt pipeline from Open-Meteo API"
     schema: raw_weather
+    freshness:
+      warn_after: {count: 10, period: day}
+      error_after: {count: 15, period: day}
+    loaded_at_field: "CAST(date AS TIMESTAMP)"
     tables:
       - name: daily_weather
         description: "Daily weather observations for NYC area"

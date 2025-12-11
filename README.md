@@ -14,6 +14,7 @@ A data platform showcasing modern data stack with incremental value from adding 
 - [Holiday Data Integration](#-holiday-data-integration)
 - [🎉 Historical Holiday Analysis (NEW)](#-historical-holiday-analysis-new)
 - [Airflow Orchestration](#-airflow-orchestration)
+- [Data Quality Framework](#-data-quality-framework)
 - [Development](#development)
 - [Testing](#testing)
 - [Data Sources](#-data-sources)
@@ -41,13 +42,21 @@ This project demonstrates a complete data pipeline that:
 - Classifies holidays as major/federal vs optional/local
 - Identifies working vs non-working days for demand analysis
 
-**Part 4 - Historical Holiday Analysis (🆕 NEW)** ✅ Spec 002 Completed
+**Part 4 - Historical Holiday Analysis** ✅ Spec 002 Completed
 - Analyzes historical bike demand around holidays vs regular weekdays
 - 4 new dbt mart models (summary, by-station, by-hour, by-area)
 - Interactive dashboard with 6 comprehensive analysis sections
 - K-Means clustering for neighborhood-level demand visualization (10-50 adjustable clusters)
 - Statistical significance testing (t-test p-values)
 - Rebalancing recommendations for operations teams
+
+**Part 5 - Data Quality Framework (🆕 NEW)** ✅ Spec 007 Completed
+- Great Expectations validation on all 4 raw sources (31 expectations)
+- dbt source freshness checks (10-day warn, 15-day error thresholds)
+- 138 dbt tests (uniqueness, not_null, accepted values)
+- Automated Data Quality DAG (daily at 6 AM UTC)
+- Results stored in `data_quality.test_results` table
+- Interactive Data Quality dashboard with KPI cards and freshness status
 
 ### Key Features
 
@@ -130,7 +139,8 @@ This project demonstrates a complete data pipeline that:
 weather-bike-demo/
 ├── airflow/
 │   ├── dags/
-│   │   └── bike_weather_dag.py      # Main orchestration DAG
+│   │   ├── bike_weather_dag.py      # Main orchestration DAG
+│   │   └── data_quality_dag.py      # Data quality validation DAG (daily)
 │   └── airflow.cfg                  # Airflow configuration
 ├── dlt_pipeline/
 │   ├── __init__.py
@@ -143,12 +153,13 @@ weather-bike-demo/
 ├── data_quality/
 │   ├── gx/                          # Great Expectations directory
 │   │   ├── great_expectations.yml   # GE configuration
-│   │   ├── expectations/            # Data validation suites
+│   │   ├── expectations/            # Data validation suites (4 suites)
 │   │   ├── checkpoints/             # Validation checkpoints
 │   │   └── uncommitted/             # Validation results (git-ignored)
 │   ├── validate_bike_data.py        # Bike validation script
 │   ├── validate_weather_data.py     # Weather validation script
-│   └── validate_all.py              # Run all validations
+│   ├── validate_all.py              # Run all 4 source validations
+│   └── store_results.py             # Store results in DuckDB (subprocess)
 ├── dbt/
 │   ├── dbt_project.yml              # dbt project config
 │   ├── profiles.yml                 # Database connections
@@ -172,7 +183,8 @@ weather-bike-demo/
 │   ├── Home.py                      # Main dashboard
 │   └── pages/
 │       ├── Weather.py               # Weather impact page
-│       └── 🆕 Holiday_Impact.py     # Historical holiday analysis (6 sections)
+│       ├── Holiday_Impact.py        # Historical holiday analysis (6 sections)
+│       └── 🆕 Data_Quality.py       # Data quality monitoring dashboard
 ├── notebooks/
 │   └── polars_eda.ipynb             # Exploratory analysis
 ├── tests/
@@ -680,6 +692,70 @@ uv run python dlt_pipeline/holidays.py
 ```
 
 **Note**: Standalone mode uses the DuckDB path from `dlt_pipeline/.dlt/secrets.toml`. Always run from the project root directory.
+
+## ✅ Data Quality Framework
+
+### Overview
+
+The Data Quality Framework provides comprehensive validation, monitoring, and reporting for all data sources. It combines Great Expectations for raw data validation with dbt tests for transformed data quality.
+
+### Components
+
+**Great Expectations Validation** (31 total expectations):
+- `bike_trips_suite`: ride_id uniqueness, not_null checks, value ranges
+- `weather_suite`: date uniqueness, temperature ranges
+- `holidays_suite`: date uniqueness, not_null on holiday_name
+- `games_suite`: game_id uniqueness, not_null checks
+
+**dbt Source Freshness**:
+- All 4 raw sources have freshness checks configured
+- Warn threshold: 10 days
+- Error threshold: 15 days
+- Run with: `uv run dbt source freshness --profiles-dir . --project-dir .`
+
+**dbt Tests** (138 total tests):
+- Uniqueness tests on primary keys
+- Not null tests on required columns
+- Accepted values tests
+- Custom SQL tests
+
+### Data Quality DAG
+
+The `data_quality_dag` runs daily at 6 AM UTC and:
+1. Runs Great Expectations validations on all 4 sources (as subprocess)
+2. Runs dbt tests (as subprocess)
+3. Stores results in `data_quality.test_results` table (as subprocess)
+
+**Note**: All tasks run as subprocesses to isolate memory from the Airflow standalone scheduler. Heavy imports (GX, pandas, duckdb) in the scheduler process caused crashes.
+
+### Running Validations
+
+```bash
+# Validate all 4 data sources with Great Expectations
+uv run python data_quality/validate_all.py
+
+# Run dbt tests
+cd dbt && uv run dbt test --profiles-dir . --project-dir .
+
+# Check source freshness
+cd dbt && uv run dbt source freshness --profiles-dir . --project-dir .
+
+# Trigger data quality DAG via Airflow
+export AIRFLOW_HOME=$PWD/airflow
+uv run airflow dags trigger data_quality_dag
+```
+
+### Data Quality Dashboard
+
+Access the Data Quality dashboard in Streamlit (`pages/Data_Quality.py`):
+- **KPI Cards**: Total tests, passed, failed, pass rate
+- **Data Freshness**: OK/WARN/STALE status for each source with color coding
+- **Failed Tests**: Expandable details for any failed validations
+
+```bash
+uv run streamlit run streamlit_app/Home.py
+# Navigate to "Data Quality" page
+```
 
 ## 💻 Development
 

@@ -80,34 +80,56 @@ data_docs_sites:
       base_directory: uncommitted/data_docs/local_site/
     site_index_builder:
       class_name: DefaultSiteIndexBuilder
+# Note: Datasources are created dynamically by validate_all.py using pandas DataFrames.
+# This avoids DuckDB/SQLAlchemy compatibility issues with GX SQL execution engine.
 fluent_datasources:
-  bike_datasource:
-    type: sql
-    id: 77abb4e5-6659-44ba-aef5-42867bee4e7a
+  bike_trips_pandas:
+    type: pandas
+    id: b69b6453-4d59-4baf-8c3c-d35e5abf359e
     assets:
-      bike_trips:
-        type: query
-        id: 0b486905-1c5c-4446-ba10-a2adb52d895d
+      bike_trips_asset:
+        type: dataframe
+        id: 6c1d2eee-74d8-4b45-91cf-e08610f9ace9
         batch_metadata: {}
         batch_definitions:
           bike_trips_batch:
-            id: 3d62edd5-93f2-4cd7-a6ed-e92546054260
+            id: 834b673a-c291-43da-a683-d4c5ee98d4bb
             partitioner:
-        query: SELECT * FROM raw_bike.bike_trips
-    connection_string: duckdb:///./duckdb/bike_ingestion.duckdb
-  weather_datasource:
-    type: sql
-    id: d93f3d84-0cf3-4cca-b8b6-262619752fad
+  weather_pandas:
+    type: pandas
+    id: fc90ceb4-5bab-413a-8ec8-d0e42e74476c
     assets:
-      daily_weather:
-        type: query
-        id: 9583496e-ee2b-4b6e-97a5-f4f5c22c3618
+      weather_asset:
+        type: dataframe
+        id: 6c8a1aad-d8e6-4024-b04a-ce71749643e0
         batch_metadata: {}
         batch_definitions:
-          daily_weather_batch:
-            id: 29d90323-9cbe-4219-9e23-a0a408396607
+          weather_batch:
+            id: d048adc5-1e75-42bd-a410-2969bdfaa3ee
             partitioner:
-        query: SELECT * FROM raw_weather.daily_weather
-    connection_string: duckdb:///./duckdb/weather_ingestion.duckdb
+  holidays_pandas:
+    type: pandas
+    id: 2d60be09-09a8-479f-8fd9-e6d0b7af053a
+    assets:
+      holidays_asset:
+        type: dataframe
+        id: c4f0054e-06fd-4fed-8110-7a073b9a764e
+        batch_metadata: {}
+        batch_definitions:
+          holidays_batch:
+            id: aa209aff-2cb4-4cff-9556-794b49911e95
+            partitioner:
+  games_pandas:
+    type: pandas
+    id: 6feb22b7-d46e-4222-aced-be7593b6e335
+    assets:
+      games_asset:
+        type: dataframe
+        id: a40e2ff9-740d-44e4-b83f-2935d66dd91b
+        batch_metadata: {}
+        batch_definitions:
+          games_batch:
+            id: ab2bbb62-93f5-4cd8-a902-120341890f85
+            partitioner:
 analytics_enabled:
 data_context_id: 66b5747f-594a-4238-85cf-0e6ccc8c93e3

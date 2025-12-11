@@ -1,0 +1,46 @@
+{
+  "expectations": [
+    {
+      "id": "a1b2c3d4-e5f6-4789-abcd-1111aaaa1111",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "a1b2c3d4-e5f6-4789-abcd-2222bbbb2222",
+      "kwargs": {
+        "column": "date"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_be_unique"
+    },
+    {
+      "id": "a1b2c3d4-e5f6-4789-abcd-3333cccc3333",
+      "kwargs": {
+        "column": "holiday_name"
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_column_values_to_not_be_null"
+    },
+    {
+      "id": "a1b2c3d4-e5f6-4789-abcd-4444dddd4444",
+      "kwargs": {
+        "min_value": 1
+      },
+      "meta": {},
+      "severity": "critical",
+      "type": "expect_table_row_count_to_be_between"
+    }
+  ],
+  "id": "f1e2d3c4-b5a6-4789-9876-abcdef012345",
+  "meta": {
+    "great_expectations_version": "1.8.1"
+  },
+  "name": "holidays_suite",
+  "notes": null
+}
